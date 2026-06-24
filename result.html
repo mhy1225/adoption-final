@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>結果揭曉｜台灣特殊兒童收養現況</title>
+  <meta name="description" content="看看你的猜測與真實數據的差距，以及其他讀者的平均預測。" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Background Ambience -->
+  <div class="bg-ambience"></div>
+  <div class="noise-overlay"></div>
+
+  <!-- Loading Screen -->
+  <div class="page-loading" id="page-loading">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">正在分析結果...</div>
+    </div>
+  </div>
+
+  <!-- Page Content (hidden until loaded) -->
+  <div class="page-wrapper" id="page-content" style="opacity: 0;">
+    <div class="container stagger-children" style="display:flex; flex-direction:column; gap:var(--space-xl);">
+
+      <!-- Tag -->
+      <div>
+        <span class="tag">
+          <span class="tag-icon">📋</span>
+          結果揭曉
+        </span>
+      </div>
+
+      <!-- Result Card: Accuracy Summary -->
+      <div class="result-card" id="result-card">
+        <div class="result-icon" id="result-icon">
+          <!-- Emoji inserted by JS -->
+        </div>
+        <h1 class="result-title" id="result-title">
+          <!-- Title inserted by JS -->
+        </h1>
+        <p class="result-description" id="result-description">
+          <!-- Description inserted by JS -->
+        </p>
+      </div>
+
+      <!-- Visual Comparison Bar -->
+      <div class="comparison-section">
+        <div class="comparison-title">數據比較</div>
+        <div class="comparison-bar-container">
+          <div class="comparison-bar-track" id="comparison-track">
+            <!-- Markers will be positioned by JS -->
+            <div class="bar-marker marker-actual" id="marker-actual" style="left:0%">
+              <div class="bar-marker-dot"></div>
+              <div class="bar-marker-label">
+                <span class="bar-marker-value">16.9%</span>
+                實際數據
+              </div>
+            </div>
+            <div class="bar-marker marker-user" id="marker-user" style="left:0%">
+              <div class="bar-marker-dot"></div>
+              <div class="bar-marker-label" style="top: auto; bottom: calc(100% + 10px);">
+                <span class="bar-marker-value" id="marker-user-value">--</span>
+                你的猜測
+              </div>
+            </div>
+            <div class="bar-marker marker-avg" id="marker-avg" style="left:0%">
+              <div class="bar-marker-dot"></div>
+              <div class="bar-marker-label">
+                <span class="bar-marker-value" id="marker-avg-value">--</span>
+                讀者平均
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="comparison-legend">
+          <div class="legend-item">
+            <div class="legend-dot actual"></div>
+            <span>實際數據</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot user"></div>
+            <span>你的猜測</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot avg"></div>
+            <span>讀者平均</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-card-value" id="stat-actual" style="color: var(--color-correct);">16.9%</div>
+          <div class="stat-card-label">實際比例</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-value" id="stat-user" style="color: var(--color-accent);">--</div>
+          <div class="stat-card-label">你的猜測</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-value" id="stat-avg" style="color: var(--color-low);">--</div>
+          <div class="stat-card-label">讀者平均</div>
+        </div>
+      </div>
+
+      <!-- Average Insight -->
+      <div class="avg-insight" id="avg-insight">
+        <div class="avg-insight-title">📊 讀者整體認知</div>
+        <p class="avg-insight-text" id="avg-insight-text">
+          正在載入...
+        </p>
+      </div>
+
+      <hr class="divider" />
+
+      <!-- CTA Buttons -->
+      <div class="cta-group">
+        <a href="https://pyau0109.github.io/news4/" target="_blank" class="btn-cta btn-cta-primary" id="btn-game">
+          <span>進入收養程序體驗</span>
+          <span class="btn-icon">→</span>
+        </a>
+        <a href="https://ceuwan1113-sys.github.io/05292/" target="_blank" class="btn-cta btn-cta-secondary" id="btn-report">
+          <span>閱讀完整報導</span>
+          <span class="btn-icon">→</span>
+        </a>
+      </div>
+
+      <!-- Footer -->
+      <p class="footer-note">
+        感謝你的參與，每一個回答都讓更多人關注特殊兒童收養議題。<br/>
+        資料來源：衛福部兒少收養統計
+      </p>
+
+    </div>
+  </div>
+
+  <!-- ============================================
+       Firebase SDK + Result Logic
+       ============================================ -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
+    import {
+      getFirestore,
+      collection,
+      getDocs
+    } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js';
+
+    // ====== Firebase 設定（需與 index.html 一致）======
+    const firebaseConfig = {
+      apiKey: "AIzaSyAPGcobq0GSyLl_Vaf68aT88-A3S2GayrQ",
+      authDomain: "adoptiondata.firebaseapp.com",
+      projectId: "adoptiondata",
+      storageBucket: "adoptiondata.firebasestorage.app",
+      messagingSenderId: "375117589801",
+      appId: "1:375117589801:web:ce18aaea45225aa899db38",
+      measurementId: "G-JZM4PZ4HE0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // ====== 常數 ======
+    const ACTUAL_PERCENTAGE = 16.883;   // 實際國內收養百分比
+    const ACCURACY_THRESHOLD = 2;       // 誤差 2% 以內算準確
+
+    // ====== 讀取使用者猜測 ======
+    const userGuess = parseFloat(localStorage.getItem('userGuess'));
+
+    // 如果沒有猜測資料，回到首頁
+    if (isNaN(userGuess)) {
+      window.location.href = 'index.html';
+    }
+
+    // ====== 從 Firebase 讀取所有猜測並計算平均 ======
+    async function fetchAverageGuess() {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'guesses'));
+        let total = 0;
+        let count = 0;
+
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          if (typeof data.guess === 'number') {
+            total += data.guess;
+            count++;
+          }
+        });
+
+        if (count > 0) {
+          return { average: total / count, count: count };
+        }
+      } catch (error) {
+        console.error('讀取 Firebase 失敗：', error);
+      }
+
+      // Fallback：如果 Firebase 失敗，使用使用者自己的數據
+      return { average: userGuess, count: 1 };
+    }
+
+    // ====== 判斷結果類型 ======
+    function getResultType(guess) {
+      const diff = guess - ACTUAL_PERCENTAGE;
+      if (Math.abs(diff) <= ACCURACY_THRESHOLD) {
+        return 'correct';
+      } else if (diff > 0) {
+        return 'high';
+      } else {
+        return 'low';
+      }
+    }
+
+    // ====== 結果文案 ======
+    function getResultContent(type, guess, avgGuess) {
+      const diff = Math.abs(guess - ACTUAL_PERCENTAGE).toFixed(1);
+
+      const content = {
+        correct: {
+          icon: '🎯',
+          title: '你猜得非常準確！',
+          description: `你的猜測是 <strong>${guess.toFixed(1)}%</strong>，與實際數據 <strong>${ACTUAL_PERCENTAGE}%</strong> 僅相差 <strong>${diff}%</strong>。你對台灣特殊兒童收養現況有相當精準的了解。`
+        },
+        high: {
+          icon: '📈',
+          title: '願意收養特殊兒童的家庭比你想象中更少...',
+          description: `你猜測有 <strong>${guess.toFixed(1)}%</strong> 的特殊兒童留在國內被收養，但實際上只有 <strong>${ACTUAL_PERCENTAGE}%</strong>——你高估了 <strong>${diff}%</strong>。現實比我們想像的更嚴峻。`
+        },
+        low: {
+          icon: '📉',
+          title: '狀況比你想象中好！',
+          description: `你猜測只有 <strong>${guess.toFixed(1)}%</strong> 的特殊兒童留在國內，實際數據是 <strong>${ACTUAL_PERCENTAGE}%</strong>——你低估了 <strong>${diff}%</strong>。雖然現實已經令人擔憂，但情況比你想得稍好一些。`
+        }
+      };
+
+      return content[type];
+    }
+
+    // ====== 讀者平均洞察文案 ======
+    function getAvgInsightText(avgGuess, count) {
+      const avgType = getResultType(avgGuess);
+      const avgDiff = Math.abs(avgGuess - ACTUAL_PERCENTAGE).toFixed(1);
+
+      let insight = `目前共有 <strong>${count}</strong> 位讀者參與了這個猜測。讀者的平均猜測為 <strong>${avgGuess.toFixed(1)}%</strong>。`;
+
+      if (avgType === 'correct') {
+        insight += `<br/><br/>整體而言，讀者們對特殊兒童國內收養的認知<strong>相當準確</strong>，平均猜測與實際數據僅相差 ${avgDiff}%。`;
+      } else if (avgType === 'high') {
+        insight += `<br/><br/>整體而言，讀者們<strong>傾向樂觀</strong>——大多數人認為留在國內的比例比實際高出了 ${avgDiff}%。這反映了社會對這個議題的認知落差。`;
+      } else {
+        insight += `<br/><br/>整體而言，讀者們<strong>傾向悲觀</strong>——大多數人認為留在國內的比例比實際低了 ${avgDiff}%。雖然現實令人心酸，但數據顯示情況比多數讀者預期的稍好。`;
+      }
+
+      return insight;
+    }
+
+    // ====== 動畫：數字遞增效果 ======
+    function animateValue(element, start, end, duration, suffix = '%') {
+      const startTime = performance.now();
+
+      function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        // easeOutCubic
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const current = start + (end - start) * eased;
+
+        element.textContent = current.toFixed(1) + suffix;
+
+        if (progress < 1) {
+          requestAnimationFrame(update);
+        }
+      }
+
+      requestAnimationFrame(update);
+    }
+
+    // ====== 動畫：標記移動 ======
+    function animateMarker(element, targetPercent, delay = 0) {
+      setTimeout(() => {
+        element.style.transition = 'left 1.2s cubic-bezier(0.4, 0, 0.2, 1)';
+        element.style.left = targetPercent + '%';
+      }, delay);
+    }
+
+    // ====== 初始化頁面 ======
+    async function initResultPage() {
+      // 取得平均猜測
+      const { average: avgGuess, count } = await fetchAverageGuess();
+
+      // 判斷結果
+      const resultType = getResultType(userGuess);
+      const resultContent = getResultContent(resultType, userGuess, avgGuess);
+
+      // 填入結果卡
+      const resultIcon = document.getElementById('result-icon');
+      const resultTitle = document.getElementById('result-title');
+      const resultDesc = document.getElementById('result-description');
+
+      resultIcon.textContent = resultContent.icon;
+      resultIcon.className = `result-icon ${resultType}`;
+      resultTitle.textContent = resultContent.title;
+      resultTitle.className = `result-title ${resultType}`;
+      resultDesc.innerHTML = resultContent.description;
+
+      // 填入統計數字（帶動畫）
+      animateValue(document.getElementById('stat-user'), 0, userGuess, 1200);
+      animateValue(document.getElementById('stat-avg'), 0, avgGuess, 1400);
+
+      // 填入比較條標記值
+      document.getElementById('marker-user-value').textContent = userGuess.toFixed(1) + '%';
+      document.getElementById('marker-avg-value').textContent = avgGuess.toFixed(1) + '%';
+
+      // 動畫移動標記
+      animateMarker(document.getElementById('marker-actual'), ACTUAL_PERCENTAGE, 300);
+      animateMarker(document.getElementById('marker-user'), userGuess, 500);
+      animateMarker(document.getElementById('marker-avg'), avgGuess, 700);
+
+      // 填入平均洞察
+      document.getElementById('avg-insight-text').innerHTML = getAvgInsightText(avgGuess, count);
+
+      // 隱藏 loading，顯示內容
+      const loading = document.getElementById('page-loading');
+      const content = document.getElementById('page-content');
+
+      loading.classList.add('fade-out');
+      content.style.transition = 'opacity 0.6s ease';
+      content.style.opacity = '1';
+      content.classList.add('page-enter');
+
+      setTimeout(() => {
+        loading.style.display = 'none';
+      }, 500);
+    }
+
+    // 啟動
+    initResultPage();
+  </script>
+
+</body>
+</html>

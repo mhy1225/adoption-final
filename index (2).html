@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>台灣特殊兒童收養現況｜你猜得到嗎？</title>
+  <meta name="description" content="2025年台灣特殊兒童收養互動新聞：猜猜有多少比例的特殊兒童被國內家庭收養？" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- Background Ambience -->
+  <div class="bg-ambience"></div>
+  <div class="noise-overlay"></div>
+
+  <!-- Page Content -->
+  <div class="page-wrapper">
+    <div class="container page-enter stagger-children" style="display:flex; flex-direction:column; gap:var(--space-xl);">
+
+      <!-- Tag -->
+      <div>
+        <span class="tag">
+          <span class="tag-icon">📊</span>
+          互動新聞
+        </span>
+      </div>
+
+      <!-- Headline -->
+      <h1 class="headline">
+        台灣的特殊兒童，<br/>有多少能留在<span class="highlight">國內的家</span>？
+      </h1>
+
+      <!-- Introduction -->
+      <p class="body-text">
+        2025年，台灣有一群身心障礙、發展遲緩的孩子順利找到了收養家庭。
+        但在這些「找到家」的特殊兒童中，究竟有多少比例是被<strong>台灣本地的家庭</strong>收養，
+        又有多少被送往<strong>海外</strong>？
+      </p>
+
+      <hr class="divider" />
+
+      <!-- Slider Section -->
+      <div class="slider-section" id="slider-section">
+        <p class="slider-label">
+          你認為被收養的特殊兒童中有多少比例留在國內？
+        </p>
+
+        <!-- Value Display -->
+        <div class="slider-value-display">
+          <span class="slider-value-number" id="slider-value">50</span>
+          <span class="slider-value-unit">%</span>
+          <div class="slider-value-caption">留在台灣被收養</div>
+        </div>
+
+        <!-- Range Slider -->
+        <div class="slider-wrapper">
+          <input
+            type="range"
+            id="guess-slider"
+            min="0"
+            max="100"
+            value="50"
+            step="0.1"
+            aria-label="猜測國內收養百分比"
+          />
+          <div class="slider-scale">
+            <span>0%</span>
+            <span>25%</span>
+            <span>50%</span>
+            <span>75%</span>
+            <span>100%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <button class="btn-submit" id="submit-btn" type="button">
+        <span class="btn-text">提交我的答案</span>
+        <span class="btn-icon">→</span>
+      </button>
+
+      <!-- Footer -->
+      <p class="footer-note">
+        你的回答將匿名保存，用於呈現讀者整體的認知狀況。<br/>
+        資料來源：衛生福利部社會及家庭署收出養媒合服務概況表
+      </p>
+
+    </div>
+  </div>
+
+  <!-- ============================================
+       Firebase SDK (使用 CDN)
+       請替換下方 firebaseConfig 為你自己的 Firebase 設定
+       ============================================ -->
+  <script type="module">
+    // ====== Firebase 設定 ======
+    // 請在 Firebase Console 建立專案後，將設定貼在這裡
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      serverTimestamp
+    } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAPGcobq0GSyLl_Vaf68aT88-A3S2GayrQ",
+      authDomain: "adoptiondata.firebaseapp.com",
+      projectId: "adoptiondata",
+      storageBucket: "adoptiondata.firebasestorage.app",
+      messagingSenderId: "375117589801",
+      appId: "1:375117589801:web:ce18aaea45225aa899db38",
+      measurementId: "G-JZM4PZ4HE0"
+    };
+
+    // 初始化 Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // ====== DOM 元素 ======
+    const slider = document.getElementById('guess-slider');
+    const valueDisplay = document.getElementById('slider-value');
+    const submitBtn = document.getElementById('submit-btn');
+
+    // ====== 滑桿互動 ======
+    function updateSliderUI(value) {
+      // 更新顯示數字
+      valueDisplay.textContent = parseFloat(value).toFixed(1);
+
+      // 更新滑桿進度條顏色
+      const progress = ((value - slider.min) / (slider.max - slider.min)) * 100;
+      slider.style.setProperty('--slider-progress', progress + '%');
+    }
+
+    // 初始化
+    updateSliderUI(slider.value);
+
+    // 監聽滑桿變化
+    slider.addEventListener('input', (e) => {
+      updateSliderUI(e.target.value);
+    });
+
+    // ====== 提交答案 ======
+    submitBtn.addEventListener('click', async () => {
+      const userGuess = parseFloat(slider.value);
+
+      // 顯示 loading 狀態
+      submitBtn.disabled = true;
+      submitBtn.querySelector('.btn-text').textContent = '提交中...';
+      submitBtn.querySelector('.btn-icon').innerHTML = '<span class="spinner"></span>';
+
+      try {
+        // 將資料寫入 Firestore
+        await addDoc(collection(db, 'guesses'), {
+          guess: userGuess,
+          timestamp: serverTimestamp(),
+          userAgent: navigator.userAgent
+        });
+
+        // 儲存使用者的猜測到 localStorage（供結果頁讀取）
+        localStorage.setItem('userGuess', userGuess.toString());
+
+        // 跳轉到結果頁面
+        window.location.href = 'result.html';
+
+      } catch (error) {
+        console.error('提交失敗：', error);
+
+        // 即使 Firebase 連線失敗，也儲存到 localStorage 並跳轉
+        localStorage.setItem('userGuess', userGuess.toString());
+        window.location.href = 'result.html';
+      }
+    });
+  </script>
+
+</body>
+</html>
