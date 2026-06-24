@@ -289,6 +289,17 @@ input[type="range"]::-webkit-slider-thumb:hover {
   box-shadow: 2px 2px 0px var(--color-text-primary);
 }
 
+/* 新增：按下去不會回彈的按鈕狀態 */
+.pixel-btn.btn-pressed {
+  transform: translate(4px, 4px) !important;
+  box-shadow: 0px 0px 0px var(--color-text-primary) !important;
+  background: #d1d5db !important; 
+  color: #6b7280 !important; 
+  border-color: #9ca3af !important;
+  pointer-events: none; /* 讓按鈕無法被再次點擊 */
+  text-shadow: none !important;
+}
+
 .btn-group {
   display: flex;
   justify-content: center;
@@ -431,7 +442,6 @@ input[type="range"]::-webkit-slider-thumb:hover {
   color: #222222 !important;
 }
 
-/* 確保這個括號有順利關起來！ */
 .cards-container strong,
 .cards-container .label,
 .cards-container .card-label,
