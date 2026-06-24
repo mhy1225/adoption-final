@@ -1,35 +1,28 @@
 // ============================================
 //  特殊兒童收養互動新聞 — script.js
-//  從 index.html 拆出，並修正 G4 卡片背景
 // ============================================
 
-// ==========================================
-    // G4: 3D 收養家庭個案翻頁系統 (3個精緻化個案)
-    // ==========================================
-    const familyCases = [
-        { 
-            id: 1, 
-            title: "收養家庭檔案 (1/3)", 
-            content: "<strong>【高社經菁英家庭】</strong><br><strong>背景：</strong>先生（45歲）為科技業副總，太太（42歲）為外商銀行高管。年收破千萬，居住於市中心豪宅，並已預先聘請全職保母。<br><strong>收養動機：</strong>經歷多年不孕，認為自身擁有頂級資源，能給予孩子最好的醫療與教育。<br><strong>社工評估隱憂（不適合）：</strong>夫妻雙方皆處於極高壓、長工時的環境，且無法配合請育嬰假。面對特殊兒的早療需求，他們傾向「花錢請專業保母與看護解決」，將醫療視為「修復缺陷的工具」，缺乏親自陪伴與情感承接的彈性。孩子恐將面臨極大的「成就期盼」壓力。" 
-        },
-        { 
-            id: 2, 
-            title: "收養家庭檔案 (2/3)", 
-            content: "<strong>【雙薪彈性辦公家庭】</strong><br><strong>背景：</strong>先生（41歲）為遠距工作的接案工程師，太太（39歲）為兼職會計。兩人收入中等但財務規劃穩健，居住於有電梯的社區大樓。<br><strong>收養動機：</strong>結婚 8 年未生育，兩年前開始接觸特殊兒早療志工服務，深刻理解「進步不是直線的」，願意以孩子的步調為中心。<br><strong>社工評估亮點（適合）：</strong>具備極高的<strong>「包容度」與「工作彈性」</strong>。先生的遠端工作型態能隨時機動配合每週數次的醫院復健與早療課程；太太已協調好在收養初期的前兩年轉為全職，專心與孩子建立安全依附關係。他們不期待孩子變得「正常」，而是準備好陪孩子面對真實的人生。" 
-        },
-        { 
-            id: 3, 
-            title: "收養家庭檔案 (3/3)", 
-            content: "<strong>【傳統大家族企業】</strong><br><strong>背景：</strong>先生（38歲）為中南部傳統傳產接班人，與父母及親戚同住透天別墅。太太（36歲）為全職家庭主婦。<br><strong>收養動機：</strong>結婚 7 年無子，面臨家族長輩龐大的傳宗接代壓力，妥協轉而尋求收養。<br><strong>社工評估隱憂（不適合）：</strong>主要照顧者（太太）承受極大家族壓力，收養動機參雜「穩固家庭地位」的目的。此外，同住的長輩對「特殊身心狀況」帶有傳統偏見，認為是「業障」或「有失顏面」。在這種缺乏無條件接納的環境中，特殊兒童極易成為家族矛盾的導火線，缺乏健康的成長空間。" 
-        }
-    ];
-    `
-  }
+const familyCases = [
+    { 
+        id: 1, 
+        title: "收養家庭檔案 (1/3)", 
+        content: "<strong>【高社經菁英家庭】</strong><br><strong>背景：</strong>先生（45歲）為科技業副總，太太（42歲）為外商銀行高管。年收破千萬，居住於市中心豪宅，並已預先聘請全職保母。<br><strong>收養動機：</strong>經歷多年不孕，認為自身擁有頂級資源，能給予孩子最好的醫療與教育。<br><strong>社工評估隱憂（不適合）：</strong>夫妻雙方皆處於極高壓、長工時的環境，且無法配合請育嬰假。面對特殊兒的早療需求，他們傾向「花錢請專業保母與看護解決」，將醫療視為「修復缺陷的工具」，缺乏親自陪伴與情感承接的彈性。孩子恐將面臨極大的「成就期盼」壓力。" 
+    },
+    { 
+        id: 2, 
+        title: "收養家庭檔案 (2/3)", 
+        content: "<strong>【雙薪彈性辦公家庭】</strong><br><strong>背景：</strong>先生（41歲）為遠距工作的接案工程師，太太（39歲）為兼職會計。兩人收入中等但財務規劃穩健，居住於有電梯的社區大樓。<br><strong>收養動機：</strong>結婚 8 年未生育，兩年前開始接觸特殊兒早療志工服務，深刻理解「進步不是直線的」，願意以孩子的步調為中心。<br><strong>社工評估亮點（適合）：</strong>具備極高的<strong>「包容度」與「工作彈性」</strong>。先生的遠端工作型態能隨時機動配合每週數次的醫院復健與早療課程；太太已協調好在收養初期的前兩年轉為全職，專心與孩子建立安全依附關係。他們不期待孩子變得「正常」，而是準備好陪孩子面對真實的人生。" 
+    },
+    { 
+        id: 3, 
+        title: "收養家庭檔案 (3/3)", 
+        content: "<strong>【傳統大家族企業】</strong><br><strong>背景：</strong>先生（38歲）為中南部傳統傳產接班人，與父母及親戚同住透天別墅。太太（36歲）為全職家庭主婦。<br><strong>收養動機：</strong>結婚 7 年無子，面臨家族長輩龐大的傳宗接代壓力，妥協轉而尋求收養。<br><strong>社工評估隱憂（不適合）：</strong>主要照顧者（太太）承受極大家族壓力，收養動機參雜「穩固家庭地位」的目的。此外，同住的長輩對「特殊身心狀況」帶有傳統偏見，認為是「業障」或「有失顏面」。在這種缺乏無條件接納的環境中，特殊兒童極易成為家族矛盾的導火線，缺乏健康的成長空間。" 
+    }
 ];
 
 // ---------- 遊戲狀態 ----------
 let gameState = {
-  childAgeMonths: 12,     // 初始年齡：1歲 0個月
+  childAgeMonths: 12,     
   ageTimerInterval: null,
   currentCardIndex: 0,
   acceptedFamilies: 0,
@@ -39,15 +32,27 @@ let gameState = {
 
 // ---------- 工具函式 ----------
 function showScreen(id) {
-  document.querySelectorAll('.screen-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.screen-section').forEach(s => {
+      s.classList.remove('active');
+      s.classList.add('hidden');
+  });
   const el = document.getElementById(id);
-  if (el) el.classList.add('active');
+  if (el) {
+      el.classList.remove('hidden');
+      el.classList.add('active');
+  }
 }
 
 function showGameScreen(id) {
-  document.querySelectorAll('.game-screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.game-screen').forEach(s => {
+      s.classList.remove('active');
+      s.classList.add('hidden');
+  });
   const el = document.getElementById(id);
-  if (el) el.classList.add('active');
+  if (el) {
+      el.classList.remove('hidden');
+      el.classList.add('active');
+  }
 }
 
 function updateAgeDisplay() {
@@ -56,7 +61,6 @@ function updateAgeDisplay() {
   const el = document.getElementById('child-age');
   if (el) el.textContent = `${years}歲 ${months}個月`;
 
-  // 3 歲警告
   const warning = document.getElementById('age-warning');
   if (warning) {
     if (gameState.childAgeMonths >= 36) {
@@ -66,7 +70,6 @@ function updateAgeDisplay() {
     }
   }
 
-  // 6 歲失敗判定
   if (gameState.childAgeMonths >= 72 && !gameState.gameFailed) {
     gameState.gameFailed = true;
     stopAgeTimer();
@@ -79,7 +82,7 @@ function startAgeTimer() {
   gameState.ageTimerInterval = setInterval(() => {
     gameState.childAgeMonths++;
     updateAgeDisplay();
-  }, 3000); // 每 3 秒增加 1 個月
+  }, 3000); 
 }
 
 function stopAgeTimer() {
@@ -94,8 +97,7 @@ function renderCurrentCard() {
   const container = document.getElementById('family-cards-container');
   if (!container) return;
 
-  if (gameState.currentCardIndex >= familyData.length) {
-    // 所有卡片看完
+  if (gameState.currentCardIndex >= familyCases.length) {
     container.innerHTML = '';
     document.getElementById('g4-hint').classList.add('hidden');
     document.getElementById('g4-action-btns').classList.add('hidden');
@@ -103,9 +105,9 @@ function renderCurrentCard() {
     return;
   }
 
-  const family = familyData[gameState.currentCardIndex];
+  // 這裡修正為 familyCases
+  const family = familyCases[gameState.currentCardIndex];
 
-  // ✅ 修正：inline style 全部明寫，不依賴任何外部 CSS，確保純白不透明
   container.innerHTML = `
     <div class="family-card" style="
       background-color: #ffffff !important;
@@ -141,7 +143,6 @@ function renderCurrentCard() {
     </div>
   `;
 
-  // 強制覆蓋卡片內所有子元素的文字顏色
   setTimeout(() => {
     const card = container.querySelector('.family-card');
     if (card) {
@@ -155,7 +156,6 @@ function renderCurrentCard() {
     }
   }, 0);
 
-  // 給卡片加入滑動動畫 class
   const card = container.querySelector('.family-card');
   if (card) {
     card.classList.add('card-enter');
@@ -187,7 +187,6 @@ function swipeCard(direction) {
 // ---------- 事件綁定 ----------
 document.addEventListener('DOMContentLoaded', () => {
 
-  // === Stage 1：滑桿猜測 ===
   const slider = document.getElementById('guess-slider');
   const sliderDisplay = document.getElementById('slider-display');
 
@@ -201,41 +200,37 @@ document.addEventListener('DOMContentLoaded', () => {
     showScreen('stage-1-result');
   });
 
-  // === Stage 1 結果 → Stage 2 ===
   document.getElementById('btn-to-stage-2')?.addEventListener('click', () => {
     showScreen('stage-2');
     showGameScreen('game-main');
   });
 
-  // === Stage 3（報導）===
   document.querySelectorAll('.btn-to-stage-3').forEach(btn => {
-    btn.addEventListener('click', () => showScreen('stage-3'));
+    btn.addEventListener('click', () => {
+      showScreen('stage-3');
+      window.scrollTo(0, 0);
+    });
   });
 
-  // === 遊戲開場 ===
   document.getElementById('btn-start-task')?.addEventListener('click', () => {
     showGameScreen('game-g1');
     startAgeTimer();
   });
 
-  // === G1 → G3 ===
   document.getElementById('btn-g1-next')?.addEventListener('click', () => {
     showGameScreen('game-g3');
   });
 
-  // === G3 事件 1 ===
   document.getElementById('btn-g3-action-1')?.addEventListener('click', () => {
     document.getElementById('g3-event-1').classList.add('hidden');
     document.getElementById('g3-event-2').classList.remove('hidden');
   });
 
-  // === G3 事件 2 ===
   document.getElementById('btn-g3-action-2')?.addEventListener('click', () => {
     document.getElementById('g3-event-2').classList.add('hidden');
     document.getElementById('btn-g3-to-g4').classList.remove('hidden');
   });
 
-  // === G3 → G4 ===
   document.getElementById('btn-g3-to-g4')?.addEventListener('click', () => {
     showGameScreen('game-g4');
     gameState.currentCardIndex = 0;
@@ -244,34 +239,28 @@ document.addEventListener('DOMContentLoaded', () => {
     renderCurrentCard();
   });
 
-  // === G4：適合（往左翻）===
   document.getElementById('btn-g4-accept')?.addEventListener('click', () => {
     swipeCard('left');
   });
 
-  // === G4：不適合（往右翻）===
   document.getElementById('btn-g4-reject')?.addEventListener('click', () => {
     swipeCard('right');
   });
 
-  // === G4 完成 → G5 ===
   document.getElementById('btn-g4-to-g5')?.addEventListener('click', () => {
     showGameScreen('game-g5');
     const nEl = document.getElementById('g5-n-value');
     if (nEl) nEl.textContent = gameState.acceptedFamilies;
-    // 每個接受家庭花 3 個月審查
     gameState.childAgeMonths += gameState.acceptedFamilies * 3;
     updateAgeDisplay();
   });
 
-  // === G5 → G6 ===
   document.getElementById('btn-g5-to-g6')?.addEventListener('click', () => {
     if (gameState.gameFailed) return;
     stopAgeTimer();
     showGameScreen('game-g6');
   });
 
-  // === G6 → R2（成功）===
   document.getElementById('btn-g6-to-r')?.addEventListener('click', () => {
     if (gameState.acceptedFamilies > 0) {
       showGameScreen('game-r2');
