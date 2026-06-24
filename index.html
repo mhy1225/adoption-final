@@ -20,10 +20,6 @@
         animation: cardEnter 0.3s ease-out forwards;
       }
 
-      /* =====================================================
-         修正 G4 卡片透明度：強制覆蓋 pixel-box 的透明背景
-         ===================================================== */
-
       /* 卡片容器本身 */
       #family-cards-container {
         position: relative;
@@ -38,7 +34,7 @@
         color: #222222 !important;
       }
 
-      /* 同時蓋掉 pixel-box 的半透明設定（若 style.css 有套用在卡片上）*/
+      /* 同時蓋掉 pixel-box 的半透明設定 */
       #family-cards-container .pixel-box,
       #family-cards-container [class*="pixel"],
       #family-cards-container [class*="card"] {
@@ -55,7 +51,7 @@
         color: #222222 !important;
       }
 
-      /* 金橘色強調標題（如「先生（41歲）：」）*/
+      /* 金橘色強調標題 */
       .family-card strong,
       #family-cards-container strong {
         color: #b45309 !important;
@@ -65,7 +61,6 @@
 <body>
 <div id="app-container">
 
-    <!-- ========== Stage 1：猜測滑桿 ========== -->
     <section id="stage-1" class="screen-section active">
         <div class="pixel-box text-center">
             <h1>台灣國內特殊兒童收養</h1>
@@ -80,8 +75,7 @@
         </div>
     </section>
 
-    <!-- ========== Stage 1 結果 ========== -->
-    <section id="stage-1-result" class="screen-section">
+    <section id="stage-1-result" class="screen-section hidden">
         <div class="pixel-box text-center">
             <h2 id="result-feedback">現實，遠比數據沉重</h2>
             <p class="stats-compare">2025 年只有 <strong>18% (13/77)</strong> 正在找家的特殊兒童，在台灣找到屬於他的家。</p>
@@ -94,14 +88,12 @@
         </div>
     </section>
 
-    <!-- ========== Stage 2：遊戲 ========== -->
-    <section id="stage-2" class="screen-section">
+    <section id="stage-2" class="screen-section hidden">
         <div class="game-hud pixel-box">
             <span>個案年齡：<span id="child-age">1歲 0個月</span></span>
             <span class="warning-text hidden" id="age-warning">⚠ 3歲提醒：媒合難度大幅提升 ⚠</span>
         </div>
 
-        <!-- 遊戲開場 -->
         <div id="game-main" class="game-screen active pixel-box">
             <h2>案件指派</h2>
             <p>你是一名社工。今天，你收到一個個案，這個小孩帶有特殊身心狀況，其母親委託出養。</p>
@@ -109,8 +101,7 @@
             <button class="pixel-btn" id="btn-start-task">開始遊戲</button>
         </div>
 
-        <!-- G1：尋找親屬 -->
-        <div id="game-g1" class="game-screen pixel-box">
+        <div id="game-g1" class="game-screen pixel-box hidden">
             <h2>第一步：尋找親屬</h2>
             <div class="pixel-box-inner error-state">
                 <p><strong>沒有找到親屬收養。</strong></p>
@@ -119,11 +110,10 @@
             <button class="pixel-btn" id="btn-g1-next">安排進入寄養家庭 ➔</button>
         </div>
 
-        <!-- G3：寄養家庭生活 -->
-        <div id="game-g3" class="game-screen pixel-box">
+        <div id="game-g3" class="game-screen pixel-box hidden">
             <h2>G3: 寄養家庭生活</h2>
             
-            <div id="g3-event-1" class="event-popup pixel-box-inner">
+            <div id="g3-event-1" class="event-popup pixel-box-inner active">
                 <h3>突發事件：醫療需求</h3>
                 <p>孩子發展遲緩跡象明顯，每週三下午需要進行復健早療。</p>
                 <button class="pixel-btn secondary" id="btn-g3-action-1">安排早療</button>
@@ -138,12 +128,10 @@
             <button class="pixel-btn hidden" id="btn-g3-to-g4">處理完畢，開放家庭篩選 ➔</button>
         </div>
 
-        <!-- G4：收養家庭卡片 -->
-        <div id="game-g4" class="game-screen pixel-box">
+        <div id="game-g4" class="game-screen pixel-box hidden">
             <h2>G4: 介紹收養家庭</h2>
             <p>請翻閱以下家庭檔案，評估是否適合收養這名特殊兒童。</p>
             
-            <!-- 卡片由 script.js 動態產生，背景已修正為純白 -->
             <div id="family-cards-container" class="cards-container"></div>
 
             <p class="text-center" id="g4-hint" style="margin: 15px 0;">👉 適合往左翻，不適合往右翻 👈</p>
@@ -159,8 +147,7 @@
             </div>
         </div>
 
-        <!-- G5：審查評估 -->
-        <div id="game-g5" class="game-screen pixel-box">
+        <div id="game-g5" class="game-screen pixel-box hidden">
             <h2>G5: 進入審查評估</h2>
             <p><strong>耗時增加：+<span id="g5-n-value">0</span> 乘以 3 個月</strong></p>
             <p>每個被判斷適合收養的家庭，都要花時間做一系列的審查：<br><strong>上課、會談、家訪、調查。</strong></p>
@@ -168,8 +155,7 @@
             <button class="pixel-btn" id="btn-g5-to-g6">審查結束，查看結果 ➔</button>
         </div>
 
-        <!-- G6：收養程序 -->
-        <div id="game-g6" class="game-screen pixel-box">
+        <div id="game-g6" class="game-screen pixel-box hidden">
             <h2>G6: 進入收養程序 (倒計時停止)</h2>
             <p>經過了漫長的 <strong>試養、評估、法院聲請許可</strong>...</p>
             <div class="pixel-box-inner success-state">
@@ -178,16 +164,14 @@
             <button class="pixel-btn primary" id="btn-g6-to-r">查看最終結局 ➔</button>
         </div>
 
-        <!-- R1：失敗結局 -->
-        <div id="game-r1" class="game-screen pixel-box error-state">
+        <div id="game-r1" class="game-screen pixel-box error-state hidden">
             <h2>R1 結局：尋家失敗</h2>
             <p>1. 孩子滿 6 歲了... 你錯過了合適的家庭。</p>
             <p>2. 你沒能在黃金境內收養期內幫孩子找到家。在台灣，3歲以上的特殊兒童媒合率便會雪崩式下滑，滿 6 歲後，國內家庭的收養意願幾乎為零。</p>
             <button class="pixel-btn primary btn-to-stage-3">閱讀完整報導</button>
         </div>
 
-        <!-- R2：成功結局 -->
-        <div id="game-r2" class="game-screen pixel-box success-state-border">
+        <div id="game-r2" class="game-screen pixel-box success-state-border hidden">
             <h2>R2 結局：成功找到國內收養家庭</h2>
             <p>你成功幫孩子找到家了！</p>
             <p><strong>但在實際情況中，這只是少數...</strong></p>
@@ -196,8 +180,7 @@
         </div>
     </section>
 
-    <!-- ========== Stage 3：報導 ========== -->
-    <section id="stage-3" class="screen-section">
+    <section id="stage-3" class="screen-section hidden">
         <div class="parallax-section header-parallax">
             <div class="pixel-box">
                 <h1>家還有多遠？</h1>
@@ -241,7 +224,6 @@
 
 </div>
 
-<!-- JS 獨立檔案 -->
 <script src="script.js"></script>
 </body>
 </html>
