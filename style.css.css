@@ -1,0 +1,257 @@
+/* ============================================================
+   基礎設定
+   ============================================================ */
+body {
+    font-family: 'DotGothic16', sans-serif, "微軟正黑體";
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f9;
+    color: #333;
+    line-height: 1.6;
+}
+
+#app-container {
+    max-width: 600px;
+    margin: 0 auto;
+    background: #fff;
+    min-height: 100vh;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+/* ============================================================
+   顯示 / 隱藏控制
+   BUG FIX：分離 screen-section 與 game-screen 的顯示控制，
+   避免 .hidden { !important } 鎖死後續的 classList.remove('hidden')。
+   小元素（事件彈窗、按鈕）仍使用 .hidden 搭配 !important 確保隱藏。
+   ============================================================ */
+
+/* screen-section（頁面層級切換） */
+.screen-section {
+    display: none;
+    padding: 20px;
+}
+.screen-section.active {
+    display: block;
+}
+
+/* game-screen（遊戲畫面切換） */
+.game-screen {
+    display: none;
+    padding: 20px;
+}
+.game-screen.active {
+    display: block;
+}
+
+/* 小元素的隱藏（事件彈窗、按鈕等）保留 !important */
+.hidden {
+    display: none !important;
+}
+
+/* 工具類 */
+.text-center {
+    text-align: center;
+}
+
+/* ============================================================
+   像素風格 UI
+   ============================================================ */
+.pixel-box {
+    border: 4px solid #333;
+    padding: 20px;
+    background: #fff;
+    box-shadow: 4px 4px 0px #ccc;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.pixel-box-inner {
+    border: 2px dashed #666;
+    padding: 15px;
+    margin: 15px 0;
+    background: #fafafa;
+}
+
+/* 狀態色 */
+.error-state {
+    border-color: #e74c3c;
+    background: #fdf2f0;
+}
+
+.success-state {
+    border-color: #2ecc71;
+    background: #eafaf1;
+}
+
+.success-state-border {
+    border-color: #f1c40f;
+}
+
+/* ============================================================
+   按鈕
+   ============================================================ */
+.pixel-btn {
+    font-family: 'DotGothic16', sans-serif;
+    border: 2px solid #333;
+    padding: 10px 15px;
+    cursor: pointer;
+    font-size: 1rem;
+    box-shadow: 2px 2px 0px #333;
+    background: #fff;
+    margin: 5px;
+    transition: transform 0.1s;
+}
+
+.pixel-btn:active {
+    transform: translate(2px, 2px);
+    box-shadow: none;
+}
+
+.pixel-btn.primary {
+    background: #3498db;
+    color: white;
+}
+
+.pixel-btn.secondary {
+    background: #e67e22;
+    color: white;
+}
+
+.btn-group {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* ============================================================
+   Range Slider
+   ============================================================ */
+.pixel-slider {
+    width: 100%;
+    margin: 20px 0;
+}
+
+.slider-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #3498db;
+}
+
+/* ============================================================
+   遊戲 HUD
+   ============================================================ */
+.game-hud {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.warning-text {
+    color: #e74c3c;
+    font-weight: bold;
+    font-size: 0.9em;
+}
+
+/* ============================================================
+   G4：收養家庭卡片翻頁
+   ============================================================ */
+.cards-container {
+    position: relative;
+    width: 100%;
+    height: 320px;
+    perspective: 1200px;
+    margin: 20px 0;
+}
+
+.family-card {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #fff;
+    border: 2px solid #333;
+    box-sizing: border-box;
+    padding: 20px;
+    border-radius: 4px;
+    box-shadow: 4px 4px 0px rgba(0, 0, 0, 0.2);
+    transform-origin: left center;
+    transition: transform 0.8s cubic-bezier(0.4, 0.2, 0.2, 1), opacity 0.6s ease;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.family-card.active {
+    z-index: 10;
+}
+
+/* 翻頁動畫 */
+.family-card.turn-page-left {
+    transform: rotateY(-120deg) scale(0.9);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.family-card.turn-page-right {
+    transform: translateX(100%) rotate(10deg);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.family-card h3 {
+    margin-top: 0;
+    font-size: 1.1em;
+    border-bottom: 2px dashed #ccc;
+    padding-bottom: 5px;
+    color: #2c3e50;
+}
+
+.family-card p {
+    font-size: 0.95em;
+    line-height: 1.5;
+    margin-bottom: 8px;
+}
+
+/* ============================================================
+   Stage 3：報導文章
+   ============================================================ */
+.article-content {
+    padding: 30px 20px;
+}
+
+.text-block {
+    margin-bottom: 30px;
+}
+
+.text-block h3 {
+    font-size: 1.2rem;
+    color: #2c3e50;
+}
+
+.eyebrow {
+    display: inline-block;
+    background: #333;
+    color: #fff;
+    padding: 2px 8px;
+    font-size: 0.8rem;
+    margin-bottom: 10px;
+}
+
+.quote-block {
+    background: #fff3cd;
+    border-color: #f1c40f;
+    font-style: italic;
+}
+
+.quote-block span {
+    display: block;
+    text-align: right;
+    margin-top: 10px;
+    font-weight: bold;
+}
