@@ -479,3 +479,32 @@ input[type="range"]::-webkit-slider-thumb:hover {
     margin-top: 10px;
     font-weight: bold;
 }
+/* ============================================
+   第二步：寄養家庭小遊戲專屬樣式
+   ============================================ */
+.stress-bubble {
+  position: absolute;
+  background: #fff3cd;
+  border: 2px solid #d97706;
+  color: #b45309;
+  padding: 8px 12px;
+  font-size: 0.95rem;
+  font-weight: bold;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 2px 2px 0px #d97706;
+  animation: popIn 0.3s ease-out forwards;
+  user-select: none;
+  z-index: 5;
+  transition: transform 0.1s;
+}
+
+.stress-bubble:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0px 0px 0px #d97706;
+}
+
+@keyframes popIn {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
