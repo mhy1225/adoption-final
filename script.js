@@ -93,7 +93,7 @@ function initScreen(id) {
         document.getElementById('g4-action-btns').classList.remove('hidden');
         renderCurrentCard();
         
-        // 若是從「再玩一次」回來，確保計時器有在跑
+        // 從再玩一次/重新遊戲回來時，若尚未失敗且無計時器，則重新啟動計時
         if (!gameState.ageTimerInterval && !gameState.gameFailed) {
             startAgeTimer();
         }
@@ -114,8 +114,44 @@ function initScreen(id) {
         });
         document.getElementById('btn-g5-to-g6').classList.add('hidden');
     }
+    if (id === 'game-g6') {
+        document.getElementById('g6-end-actions').classList.add('hidden');
+        
+        // 若全部拒絕 (在第三步被攔截) 
+        if (gameState.acceptedFamilies === 0 && !gameState.gameFailed) {
+            document.getElementById('g6-subtitle').classList.add('hidden');
+            document.getElementById('g6-process-buttons').classList.add('hidden');
+            
+            const g6Msg = document.getElementById('g6-msg');
+            g6Msg.innerHTML = '<p style="font-size:1.3em;"><strong>❌ 結局：未媒合到適合家庭</strong></p><div style="text-align: left; margin-top:15px; font-size: 0.95em;"><p><strong>【社工結案評估】</strong></p><p>你審慎評估後，認為目前的家庭都不適合收養這名特殊兒童，全部予以拒絕。</p><p>孩子沒有找到家，只能繼續留在寄養體系中等待。隨著孩子年紀增長，這是一場沒有盡頭的消耗戰...</p></div>';
+            g6Msg.className = 'pixel-box-inner error-state';
+            g6Msg.classList.remove('hidden');
+            
+            showEndActions(gameState.childAgeMonths >= 72 ? '重新遊戲' : '再玩一次');
+        } 
+        // 正常進入收養程序
+        else if (!gameState.gameFailed) {
+            document.getElementById('g6-subtitle').classList.remove('hidden');
+            document.getElementById('g6-process-buttons').classList.remove('hidden');
+            ['btn-proc-1', 'btn-proc-2', 'btn-proc-3'].forEach(b => {
+                const btn = document.getElementById(b);
+                if(btn) {
+                    btn.classList.remove('btn-pressed');
+                    if(b !== 'btn-proc-1') {
+                        btn.disabled = true;
+                        btn.style.opacity = '0.5';
+                    } else {
+                        btn.disabled = false;
+                        btn.style.opacity = '1';
+                    }
+                }
+            });
+            document.getElementById('g6-msg').classList.add('hidden');
+        }
+    }
 }
 
+// 顯示結局按鈕
 function showEndActions(replayText) {
     document.getElementById('g6-end-actions').classList.remove('hidden');
     document.getElementById('btn-replay-game').innerText = replayText;
@@ -135,23 +171,6 @@ function triggerTimeoutOutcome() {
     
     showEndActions('重新遊戲');
 }
-
-// 觸發未媒合結局 (全拒絕)
-function triggerAllRejectedOutcome() {
-    navigateTo('stage-2', 'game-g6');
-    document.getElementById('g6-title').innerText = "最終結局";
-    document.getElementById('g6-subtitle').classList.add('hidden');
-    document.getElementById('g6-process-buttons').classList.add('hidden');
-    
-    const g6Msg = document.getElementById('g6-msg');
-    g6Msg.innerHTML = '<p style="font-size:1.3em; color:#e74c3c;"><strong>❌ 結局：未媒合到適合家庭</strong></p><div style="text-align: left; margin-top:15px; font-size: 0.95em;"><p><strong>【社工結案評估】</strong></p><p>你審慎評估後，認為目前的家庭都不適合收養這名特殊兒童，全部予以拒絕。</p><p>孩子沒有找到家，只能繼續留在寄養體系中等待。隨著時間流逝，大童的媒合難度將越來越高，這是一場沒有盡頭的消耗戰...</p></div>';
-    g6Msg.className = 'pixel-box-inner error-state';
-    g6Msg.classList.remove('hidden');
-    
-    const replayText = gameState.childAgeMonths >= 72 ? '重新遊戲' : '再玩一次';
-    showEndActions(replayText);
-}
-
 
 // ---------- 年齡計算系統 ----------
 function updateAgeDisplay() {
@@ -245,7 +264,6 @@ function spawnSingleBubble(area) {
         bubble.removeEventListener('mousedown', onBubbleClick);
         bubble.classList.add('popped');
         
-        // 點擊消除一次扣 25 點壓力
         stressLevel = Math.max(0, stressLevel - 25);
         updateStressUI();
         
@@ -302,12 +320,12 @@ function renderCurrentCard() {
   if (gameState.currentCardIndex >= familyCases.length) {
     container.innerHTML = '';
     
-    // 如果全都拒絕，直接跳到未媒合結局；否則進入審查評估
+    // 如果全都拒絕，直接跳到 G6 (未媒合結局)
     if (gameState.acceptedFamilies === 0) {
         document.getElementById('g4-action-btns').classList.add('hidden');
         setTimeout(() => {
             stopAgeTimer();
-            triggerAllRejectedOutcome();
+            navigateTo('stage-2', 'game-g6');
         }, 500);
         return;
     } else {
@@ -389,7 +407,6 @@ function handleScrollNext() {
 
 document.addEventListener('DOMContentLoaded', () => {
 
-  // 首頁專用下滑按鈕
   document.getElementById('btn-scroll-down')?.addEventListener('click', () => navigateTo('stage-2', 'game-main'));
 
   // 電腦滾輪：只允許在首頁下滑進入遊戲
@@ -466,11 +483,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (gameState.gameFailed) return;
     stopAgeTimer(); 
     navigateTo('stage-2', 'game-g6');
-    
-    // 初始化 G6 的標題與按鈕狀態
     document.getElementById('g6-title').innerText = "第四步：進入收養程序";
-    document.getElementById('g6-subtitle').classList.remove('hidden');
-    document.getElementById('g6-process-buttons').classList.remove('hidden');
   });
 
   // === 第四步收養程序與結局判定 ===
@@ -492,7 +505,6 @@ document.addEventListener('DOMContentLoaded', () => {
   btnProc3?.addEventListener('click', () => {
       btnProc3.classList.add('btn-pressed');
       
-      // 成功組合：001不適合(false)、002適合(true)、003不適合(false)
       const isPerfectMatch = (gameState.choices[0] === false && gameState.choices[1] === true && gameState.choices[2] === false);
 
       if (g6Msg) {
@@ -520,15 +532,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // === 重新遊戲 / 再玩一次 邏輯 ===
   document.getElementById('btn-replay-game')?.addEventListener('click', () => {
-      // 判斷是否逾時，若逾時則時間歸零
       if (gameState.childAgeMonths >= 72 || gameState.gameFailed) {
-          gameState.childAgeMonths = 12; // 回到 1歲0個月
+          gameState.childAgeMonths = 12; 
           gameState.gameFailed = false;
       }
       
-      // 導回第二步：介紹收養家庭 (game-g4)
+      // 回到第二步 (game-g4)
       navigateTo('stage-2', 'game-g4');
-      startAgeTimer(); // 恢復時間計算
   });
 
 });
