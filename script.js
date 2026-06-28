@@ -112,6 +112,10 @@ function initScreen(id) {
             }
         });
         document.getElementById('btn-g5-to-g6').classList.add('hidden');
+        ['narrative-eval-1','narrative-eval-2','narrative-eval-3','narrative-eval-4'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
+        });
     }
     if (id === 'game-g6') {
         document.getElementById('g6-end-actions').classList.add('hidden');
@@ -156,6 +160,8 @@ function initScreen(id) {
                 }
             });
             document.getElementById('g6-msg').classList.add('hidden');
+        const popup = document.getElementById('eval-form-popup');
+        if (popup) popup.classList.add('hidden');
         }
     }
 }
@@ -327,9 +333,12 @@ function renderCurrentCard() {
 
   if (gameState.currentCardIndex >= familyCases.length) {
     container.innerHTML = '';
-    
     document.getElementById('g4-action-btns').classList.add('hidden');
-    
+
+    // 立即隱藏整個 game-g4 外框，避免純文字殘影
+    const g4 = document.getElementById('game-g4');
+    if (g4) { g4.classList.remove('active'); g4.classList.add('hidden'); }
+
     if (gameState.acceptedFamilies === 0) {
         setTimeout(() => {
             stopAgeTimer();
@@ -460,27 +469,36 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnEval4 = document.getElementById('btn-eval-4');
   const btnG5ToG6 = document.getElementById('btn-g5-to-g6');
 
+  function showNarrative(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('hidden');
+  }
+
   btnEval1?.addEventListener('click', () => {
       btnEval1.classList.add('btn-pressed');
-      gameState.childAgeMonths += 3; updateAgeDisplay();
+      gameState.childAgeMonths += 2; updateAgeDisplay();
+      showNarrative('narrative-eval-1');
       if (btnEval2) { btnEval2.disabled = false; btnEval2.style.opacity = '1'; }
   });
 
   btnEval2?.addEventListener('click', () => {
       btnEval2.classList.add('btn-pressed');
-      gameState.childAgeMonths += 3; updateAgeDisplay();
+      gameState.childAgeMonths += 2; updateAgeDisplay();
+      showNarrative('narrative-eval-2');
       if (btnEval3) { btnEval3.disabled = false; btnEval3.style.opacity = '1'; }
   });
 
   btnEval3?.addEventListener('click', () => {
       btnEval3.classList.add('btn-pressed');
-      gameState.childAgeMonths += 3; updateAgeDisplay();
+      gameState.childAgeMonths += 2; updateAgeDisplay();
+      showNarrative('narrative-eval-3');
       if (btnEval4) { btnEval4.disabled = false; btnEval4.style.opacity = '1'; }
   });
 
   btnEval4?.addEventListener('click', () => {
       btnEval4.classList.add('btn-pressed');
       gameState.childAgeMonths += 3; updateAgeDisplay();
+      showNarrative('narrative-eval-4');
       if (btnG5ToG6) { btnG5ToG6.classList.remove('hidden'); }
   });
 
@@ -499,16 +517,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btnProc1?.addEventListener('click', () => {
       btnProc1.classList.add('btn-pressed');
-      if (btnProc2) { btnProc2.disabled = false; btnProc2.style.opacity = '1'; }
+      showNarrative('narrative-proc-1');
+      if (btnProc2) {
+          btnProc2.disabled = false;
+          btnProc2.style.opacity = '1';
+          // enable hover popup now that button is active
+          const popup = document.getElementById('eval-form-popup');
+          if (popup) popup.classList.remove('hidden');
+      }
   });
 
   btnProc2?.addEventListener('click', () => {
       btnProc2.classList.add('btn-pressed');
+      showNarrative('narrative-proc-2');
       if (btnProc3) { btnProc3.disabled = false; btnProc3.style.opacity = '1'; }
   });
 
   btnProc3?.addEventListener('click', () => {
       btnProc3.classList.add('btn-pressed');
+      // Show age reminder before outcome
+      const ageYears = Math.floor(gameState.childAgeMonths / 12);
+      const ageMons = gameState.childAgeMonths % 12;
+      const ageReminderEl = document.createElement('div');
+      ageReminderEl.className = 'eval-narrative';
+      ageReminderEl.style.maxWidth = '420px';
+      ageReminderEl.style.margin = '10px auto';
+      ageReminderEl.innerHTML = `⚖️ 聲請書送出，法院平均處理時間：3–6 個月。<br><strong style="color:#e74c3c;">孩子現在 ${ageYears} 歲 ${ageMons} 個月了。</strong>`;
+      btnProc3.parentElement.appendChild(ageReminderEl);
       
       const isPerfectMatch = (gameState.choices[0] === false && gameState.choices[1] === true && gameState.choices[2] === false);
 
