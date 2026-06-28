@@ -36,7 +36,7 @@ let currentSectionId = 'stage-1-result';
 let currentGameId = null;
 let isNavigating = false;
 
-// 核心：絲滑轉場功能 (已拔除歷史與返回機制)
+// 核心：絲滑轉場功能
 function navigateTo(secId, gameId = null) {
     if (isNavigating) return;
     isNavigating = true;
@@ -163,7 +163,7 @@ function startAgeTimer() {
   gameState.ageTimerInterval = setInterval(() => {
     gameState.childAgeMonths++;
     updateAgeDisplay();
-  }, 3000); 
+  }, 2000); // 已經修改為每 2000 毫秒 (2秒) 增加 1 個月
 }
 
 function stopAgeTimer() {
@@ -283,7 +283,6 @@ function renderCurrentCard() {
   if (gameState.currentCardIndex >= familyCases.length) {
     container.innerHTML = '';
     
-    // 如果全都拒絕，直接跳到未媒合結局；否則進入審查評估
     if (gameState.acceptedFamilies === 0) {
         document.getElementById('g4-action-btns').classList.add('hidden');
         setTimeout(() => {
@@ -364,12 +363,16 @@ function swipeCard(isAccepted) {
 
 // ---------- 事件綁定與單向滑動邏輯 ----------
 
+function handleScrollNext() {
+    if (currentSectionId === 'stage-1-result') navigateTo('stage-2', 'game-main');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
 
   // 首頁專用下滑按鈕
   document.getElementById('btn-scroll-down')?.addEventListener('click', () => navigateTo('stage-2', 'game-main'));
 
-  // 電腦滾輪：只允許在首頁下滑進入遊戲，其餘滑動全部關閉
+  // 電腦滾輪
   window.addEventListener('wheel', (e) => {
       if (isNavigating) return;
       if (currentSectionId === 'stage-1-result' && e.deltaY > 30) {
@@ -377,7 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
   });
 
-  // 手機觸控：只允許在首頁下滑進入遊戲，其餘滑動全部關閉
+  // 手機觸控
   let touchStartY = 0;
   window.addEventListener('touchstart', (e) => {
       touchStartY = e.touches[0].clientY;
@@ -465,7 +468,6 @@ document.addEventListener('DOMContentLoaded', () => {
   btnProc3?.addEventListener('click', () => {
       btnProc3.classList.add('btn-pressed');
       
-      // 成功判定：只有在選擇為 false, true, false (001否, 002是, 003否) 時才算成功
       const isPerfectMatch = (gameState.choices[0] === false && gameState.choices[1] === true && gameState.choices[2] === false);
 
       if (g6Msg && btnG6ToR) {
