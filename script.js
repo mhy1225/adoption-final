@@ -6,12 +6,12 @@ const familyCases = [
     { 
         id: 1, 
         title: "收養檔案號：001", 
-        content: "<strong>【高社經菁英家庭】</strong><br><strong>背景：</strong>先生（45歲）為科技業副總，太太（42歲）為外商銀行高管。年收破千萬，居住於市中心豪宅，並預先聘請全職保母。<br><strong>收養動機：</strong>經歷多年不孕，認為自身擁有頂級資源，能給予孩子最好的醫療與教育。<br><strong>支持系統：</strong>雙方父母皆在國外。平時依賴付費保母與看護，長輩認為只要花錢就能解決早療與照顧問題，無法配合請育嬰假。" 
+        content: "<strong>【高社經菁英家庭】</strong><br><strong>背景：</strong>先生（45歲）為科技業副總，太太（42歲）為外商銀行高管。年收破千萬，居住於市中心豪宅，並預先聘請全職保母。<br><strong>收養動機：</strong>經歷多年不孕，認為自身擁有頂級資源，能給予孩子最好的醫療與教育。<br><strong>支持系統：</strong>雙方父母皆在國外，無法請育嬰假，打算請保母帶。長輩傾向收養健康的小孩。" 
     },
     { 
         id: 2, 
         title: "收養檔案號：002", 
-        content: "<strong>【雙薪彈性辦公家庭】</strong><br><strong>背景：</strong>先生（41歲）為遠距接案工程師，太太（39歲）為兼職會計。收入中等財務穩健。<br><strong>收養動機：</strong>結婚 8 年未生育，具備特殊兒早療志工經驗，理解「進步不是直線的」。<br><strong>支持系統：</strong>太太可轉全職，先生遠端工作彈性大。雙方父母觀念開明，願意在週末協助照顧，甚至已主動報名特殊兒照護課程。" 
+        content: "<strong>【雙薪彈性辦公家庭】</strong><br><strong>背景：</strong>先生（41歲）為遠距接案工程師，太太（39歲）為兼職會計。收入中等財務穩健。<br><strong>收養動機：</strong>結婚 8 年未生育，具備特殊兒早療志工經驗，理解「進步不是直線的」。<br><strong>支持系統：</strong>父親工時長，加班時間不固定，母親為全職家庭主婦是主要照顧人，也表明很願意花時間投入特殊兒的照顧。不過同住的公婆認為收養的小孩終究不是自家人，希望夫妻擁有自己的小孩。" 
     },
     { 
         id: 3, 
@@ -92,6 +92,11 @@ function initScreen(id) {
         gameState.choices = []; 
         document.getElementById('g4-action-btns').classList.remove('hidden');
         renderCurrentCard();
+        
+        // 若是從「再玩一次」回來，確保計時器有在跑
+        if (!gameState.ageTimerInterval && !gameState.gameFailed) {
+            startAgeTimer();
+        }
     }
     if (id === 'game-g5') {
         ['btn-eval-1', 'btn-eval-2', 'btn-eval-3', 'btn-eval-4'].forEach(b => {
@@ -109,39 +114,44 @@ function initScreen(id) {
         });
         document.getElementById('btn-g5-to-g6').classList.add('hidden');
     }
-    if (id === 'game-g6') {
-        // 如果第三步選擇全拒絕，這裡會直接跳過按鈕顯示結局
-        if (gameState.acceptedFamilies === 0) {
-            document.getElementById('g6-subtitle').classList.add('hidden');
-            document.getElementById('g6-process-buttons').classList.add('hidden');
-            
-            const g6Msg = document.getElementById('g6-msg');
-            g6Msg.innerHTML = '<p style="font-size:1.3em;"><strong>❌ 結局：未媒合到適合家庭</strong></p><div style="text-align: left; margin-top:15px; font-size: 0.95em;"><p><strong>【社工結案評估】</strong></p><p>你審慎評估後，認為目前的家庭都不適合收養這名特殊兒童，全部予以拒絕。</p><p>孩子沒有找到家，只能繼續留在寄養體系中等待。隨著孩子年紀增長，國內家庭的收養意願幾乎為零，這是一場沒有盡頭的消耗戰...</p></div>';
-            g6Msg.className = 'pixel-box-inner error-state';
-            g6Msg.classList.remove('hidden');
-            
-            document.getElementById('btn-g6-to-r').classList.remove('hidden');
-        } else {
-            document.getElementById('g6-subtitle').classList.remove('hidden');
-            document.getElementById('g6-process-buttons').classList.remove('hidden');
-            ['btn-proc-1', 'btn-proc-2', 'btn-proc-3'].forEach(b => {
-                const btn = document.getElementById(b);
-                if(btn) {
-                    btn.classList.remove('btn-pressed');
-                    if(b !== 'btn-proc-1') {
-                        btn.disabled = true;
-                        btn.style.opacity = '0.5';
-                    } else {
-                        btn.disabled = false;
-                        btn.style.opacity = '1';
-                    }
-                }
-            });
-            document.getElementById('g6-msg').classList.add('hidden');
-            document.getElementById('btn-g6-to-r').classList.add('hidden');
-        }
-    }
 }
+
+function showEndActions(replayText) {
+    document.getElementById('g6-end-actions').classList.remove('hidden');
+    document.getElementById('btn-replay-game').innerText = replayText;
+}
+
+// 觸發大童難出養結局 (逾時)
+function triggerTimeoutOutcome() {
+    navigateTo('stage-2', 'game-g6');
+    document.getElementById('g6-title').innerText = "最終結局";
+    document.getElementById('g6-subtitle').classList.add('hidden');
+    document.getElementById('g6-process-buttons').classList.add('hidden');
+    
+    const g6Msg = document.getElementById('g6-msg');
+    g6Msg.innerHTML = '<p style="font-size:1.3em; color:#e74c3c;"><strong>❌ 結局：超過黃金收養期</strong></p><div style="text-align: left; margin-top:15px; font-size: 0.95em;"><p><strong>【社工結案評估】</strong></p><p>孩子在漫長的等待與程序中，已經超過了 6 歲。在台灣的收養環境中，大童的媒合難度極高，多數家庭傾向收養嬰幼兒。</p><p>孩子錯過了國內出養的黃金時期，難以找到願意接納的家庭，只能繼續在安置體系中長大...</p></div>';
+    g6Msg.className = 'pixel-box-inner error-state';
+    g6Msg.classList.remove('hidden');
+    
+    showEndActions('重新遊戲');
+}
+
+// 觸發未媒合結局 (全拒絕)
+function triggerAllRejectedOutcome() {
+    navigateTo('stage-2', 'game-g6');
+    document.getElementById('g6-title').innerText = "最終結局";
+    document.getElementById('g6-subtitle').classList.add('hidden');
+    document.getElementById('g6-process-buttons').classList.add('hidden');
+    
+    const g6Msg = document.getElementById('g6-msg');
+    g6Msg.innerHTML = '<p style="font-size:1.3em; color:#e74c3c;"><strong>❌ 結局：未媒合到適合家庭</strong></p><div style="text-align: left; margin-top:15px; font-size: 0.95em;"><p><strong>【社工結案評估】</strong></p><p>你審慎評估後，認為目前的家庭都不適合收養這名特殊兒童，全部予以拒絕。</p><p>孩子沒有找到家，只能繼續留在寄養體系中等待。隨著時間流逝，大童的媒合難度將越來越高，這是一場沒有盡頭的消耗戰...</p></div>';
+    g6Msg.className = 'pixel-box-inner error-state';
+    g6Msg.classList.remove('hidden');
+    
+    const replayText = gameState.childAgeMonths >= 72 ? '重新遊戲' : '再玩一次';
+    showEndActions(replayText);
+}
+
 
 // ---------- 年齡計算系統 ----------
 function updateAgeDisplay() {
@@ -163,9 +173,7 @@ function updateAgeDisplay() {
   if (gameState.childAgeMonths >= 72 && !gameState.gameFailed) {
     gameState.gameFailed = true;
     stopAgeTimer();
-    // 將所有未達條件的人送往未媒合結局(在G6顯示)
-    gameState.acceptedFamilies = 0; 
-    navigateTo('stage-2', 'game-g6'); 
+    triggerTimeoutOutcome();
   }
 }
 
@@ -237,6 +245,7 @@ function spawnSingleBubble(area) {
         bubble.removeEventListener('mousedown', onBubbleClick);
         bubble.classList.add('popped');
         
+        // 點擊消除一次扣 25 點壓力
         stressLevel = Math.max(0, stressLevel - 25);
         updateStressUI();
         
@@ -293,20 +302,21 @@ function renderCurrentCard() {
   if (gameState.currentCardIndex >= familyCases.length) {
     container.innerHTML = '';
     
-    document.getElementById('g4-action-btns').classList.add('hidden');
-    
-    // 如果全都拒絕，直接跳到最後一步(G6)看未媒合結局；否則進入第三步(G5)審查評估
+    // 如果全都拒絕，直接跳到未媒合結局；否則進入審查評估
     if (gameState.acceptedFamilies === 0) {
+        document.getElementById('g4-action-btns').classList.add('hidden');
         setTimeout(() => {
             stopAgeTimer();
-            navigateTo('stage-2', 'game-g6');
+            triggerAllRejectedOutcome();
         }, 500);
+        return;
     } else {
+        document.getElementById('g4-action-btns').classList.add('hidden');
         setTimeout(() => {
             navigateTo('stage-2', 'game-g5');
         }, 500);
+        return;
     }
-    return;
   }
 
   const family = familyCases[gameState.currentCardIndex];
@@ -379,6 +389,7 @@ function handleScrollNext() {
 
 document.addEventListener('DOMContentLoaded', () => {
 
+  // 首頁專用下滑按鈕
   document.getElementById('btn-scroll-down')?.addEventListener('click', () => navigateTo('stage-2', 'game-main'));
 
   // 電腦滾輪：只允許在首頁下滑進入遊戲
@@ -400,6 +411,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (currentSectionId === 'stage-1-result' && dy > 40) {
           navigateTo('stage-2', 'game-main');
       }
+  });
+
+  // 統一連至報導
+  document.querySelectorAll('.btn-to-stage-3').forEach(btn => {
+    btn.addEventListener('click', () => {
+      navigateTo('stage-3', null);
+    });
   });
 
   // 流程按鈕
@@ -448,6 +466,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (gameState.gameFailed) return;
     stopAgeTimer(); 
     navigateTo('stage-2', 'game-g6');
+    
+    // 初始化 G6 的標題與按鈕狀態
+    document.getElementById('g6-title').innerText = "第四步：進入收養程序";
+    document.getElementById('g6-subtitle').classList.remove('hidden');
+    document.getElementById('g6-process-buttons').classList.remove('hidden');
   });
 
   // === 第四步收養程序與結局判定 ===
@@ -455,7 +478,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnProc2 = document.getElementById('btn-proc-2');
   const btnProc3 = document.getElementById('btn-proc-3');
   const g6Msg = document.getElementById('g6-msg');
-  const btnG6ToR = document.getElementById('btn-g6-to-r');
 
   btnProc1?.addEventListener('click', () => {
       btnProc1.classList.add('btn-pressed');
@@ -473,32 +495,40 @@ document.addEventListener('DOMContentLoaded', () => {
       // 成功組合：001不適合(false)、002適合(true)、003不適合(false)
       const isPerfectMatch = (gameState.choices[0] === false && gameState.choices[1] === true && gameState.choices[2] === false);
 
-      if (g6Msg && btnG6ToR) {
+      if (g6Msg) {
           if (isPerfectMatch) {
-              g6Msg.innerHTML = '<p style="font-size:1.3em;"><strong>🎉 恭喜！收養程序順利完成！</strong></p><div style="text-align: left; margin-top:15px; font-size: 0.95em;"><p><strong>【社工結案評估】</strong></p><p>你做出了最敏銳的判斷！002家庭具備極高的<strong>包容度與工作彈性</strong>。先生的遠端工作能機動配合早療，太太專心建立依附關係。他們不期待孩子「正常」，且長輩願意正向協助，是特殊兒最理想的避風港。</p></div>';
+              g6Msg.innerHTML = '<p style="font-size:1.3em; color:#2ecc71;"><strong>🎉 恭喜！收養程序順利完成！</strong></p><div style="text-align: left; margin-top:15px; font-size: 0.95em;"><p><strong>【社工結案評估】</strong></p><p>你做出了最敏銳的判斷！002家庭雖然面臨長輩期待與工時的挑戰，但母親有全職投入的意願，且具備特殊兒志工經驗的包容度。在不完美的現實中，這已是孩子難得的避風港。</p></div>';
               g6Msg.className = 'pixel-box-inner success-state';
           } else {
               let failReasons = '';
               if (gameState.choices[0] === true) {
-                  failReasons += '<p><strong>001 高社經家庭：</strong>夫妻皆高壓高工時，無法配合請育嬰假。將醫療視為修復工具，期待孩子跟上一般人，給孩子帶來極大成就壓力，且缺乏親自陪伴的彈性。</p>';
+                  failReasons += '<p><strong>❌ 001 高社經家庭：</strong>雙方皆無法親自陪伴，將照顧外包，且長輩傾向健康小孩。將醫療視為修復工具會給特殊兒帶來極大壓力，缺乏真正的包容。</p>';
               }
               if (gameState.choices[2] === true) {
-                  failReasons += '<p><strong>003 大家族企業：</strong>太太承受極大家族壓力，收養參雜穩固地位考量。同住長輩的偏見讓特殊兒成為家族矛盾導火線，缺乏無條件接納的空間。</p>';
+                  failReasons += '<p><strong>❌ 003 大家族企業：</strong>太太承受極大家族壓力，同住長輩對特殊狀況帶有偏見。孩子極易成為家族矛盾導火線，缺乏無條件接納的安全感。</p>';
               }
               
-              g6Msg.innerHTML = `<p style="font-size:1.3em;"><strong>❌ 結局：收養宣告失敗</strong></p><div style="text-align: left; margin-top:15px; font-size: 0.95em;"><p><strong>【社工結案評估】</strong></p><p>試養與評估過程中發生嚴重適應問題，程序被迫終止：</p>${failReasons}<p style="margin-top:10px;">孩子只能退回安置體系，繼續漫長而未知的等待...</p></div>`;
+              g6Msg.innerHTML = `<p style="font-size:1.3em; color:#e74c3c;"><strong>❌ 結局：收養宣告失敗</strong></p><div style="text-align: left; margin-top:15px; font-size: 0.95em;"><p><strong>【社工結案評估】</strong></p><p>試養與評估過程中發生嚴重適應問題，程序被迫終止：</p>${failReasons}<p style="margin-top:10px;">孩子只能退回安置體系，繼續漫長而未知的等待...</p></div>`;
               g6Msg.className = 'pixel-box-inner error-state';
           }
           g6Msg.classList.remove('hidden');
-          btnG6ToR.classList.remove('hidden');
+          
+          const replayText = gameState.childAgeMonths >= 72 ? '重新遊戲' : '再玩一次';
+          showEndActions(replayText);
       }
   });
 
-  // 統一連至報導
-  document.querySelectorAll('.btn-to-stage-3').forEach(btn => {
-    btn.addEventListener('click', () => {
-      navigateTo('stage-3', null);
-    });
+  // === 重新遊戲 / 再玩一次 邏輯 ===
+  document.getElementById('btn-replay-game')?.addEventListener('click', () => {
+      // 判斷是否逾時，若逾時則時間歸零
+      if (gameState.childAgeMonths >= 72 || gameState.gameFailed) {
+          gameState.childAgeMonths = 12; // 回到 1歲0個月
+          gameState.gameFailed = false;
+      }
+      
+      // 導回第二步：介紹收養家庭 (game-g4)
+      navigateTo('stage-2', 'game-g4');
+      startAgeTimer(); // 恢復時間計算
   });
 
 });
