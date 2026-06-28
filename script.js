@@ -6,17 +6,17 @@ const familyCases = [
     { 
         id: 1, 
         title: "收養檔案號：001", 
-        content: "<strong>【高社經菁英家庭】</strong><br><strong>背景：</strong>先生（45歲）為科技業副總，太太（42歲）為外商銀行高管。年收破千萬，居住於市中心豪宅，並預先聘請全職保母。<br><strong>收養動機：</strong>經歷多年不孕，認為自身擁有頂級資源，能給予孩子最好的醫療與教育。<br><strong>社工評估筆記：</strong>夫妻雙方皆處於極高壓環境，無法配合請育嬰假。面對早療需求傾向「花錢請保母解決」，期待孩子能透過醫療跟上一般人的發展標準。" 
+        content: "<strong>【高社經菁英家庭】</strong><br><strong>背景：</strong>先生（45歲）為科技業副總，太太（42歲）為外商銀行高管。年收破千萬，居住於市中心豪宅，並預先聘請全職保母。<br><strong>收養動機：</strong>經歷多年不孕，認為自身擁有頂級資源，能給予孩子最好的醫療與教育。<br><strong>支持系統：</strong>雙方父母皆在國外。平時依賴付費保母與看護，長輩認為只要花錢就能解決早療與照顧問題，無法配合請育嬰假。" 
     },
     { 
         id: 2, 
         title: "收養檔案號：002", 
-        content: "<strong>【雙薪彈性辦公家庭】</strong><br><strong>背景：</strong>先生（41歲）為遠距接案工程師，太太（39歲）為兼職會計。收入中等財務穩健。<br><strong>收養動機：</strong>結婚 8 年未生育，具備特殊兒早療志工經驗，理解「進步不是直線的」。<br><strong>社工評估筆記：</strong>展現極高的<strong>「包容度」與「工作彈性」</strong>。先生能隨時機動配合醫院復健；太太計畫前兩年轉全職建立依附關係。不期待孩子變得「正常」，而是準備好陪孩子面對真實人生。" 
+        content: "<strong>【雙薪彈性辦公家庭】</strong><br><strong>背景：</strong>先生（41歲）為遠距接案工程師，太太（39歲）為兼職會計。收入中等財務穩健。<br><strong>收養動機：</strong>結婚 8 年未生育，具備特殊兒早療志工經驗，理解「進步不是直線的」。<br><strong>支持系統：</strong>太太可轉全職，先生遠端工作彈性大。雙方父母觀念開明，願意在週末協助照顧，甚至已主動報名特殊兒照護課程。" 
     },
     { 
         id: 3, 
         title: "收養檔案號：003", 
-        content: "<strong>【傳統大家族企業】</strong><br><strong>背景：</strong>先生（38歲）為傳產接班人，與父母親戚同住透天別墅。太太（36歲）為全職家庭主婦。<br><strong>收養動機：</strong>面臨長輩傳宗接代壓力，妥協轉而尋求收養。<br><strong>社工評估筆記：</strong>太太承受極大壓力，收養動機參雜「穩固地位」考量。同住長輩對特殊狀況帶有偏見，認為是「業障」。特殊兒童極易成為家族矛盾導火線，缺乏無條件接納的空間。" 
+        content: "<strong>【傳統大家族企業】</strong><br><strong>背景：</strong>先生（38歲）為傳產接班人，與父母親戚同住透天別墅。太太（36歲）為全職家庭主婦。<br><strong>收養動機：</strong>面臨長輩傳宗接代壓力，妥協轉而尋求收養。<br><strong>支持系統：</strong>與公婆同住，雖有人手，但長輩對特殊兒帶有嚴重偏見，認為是業障，無法提供正向支持，反而會對主要照顧者施加極大壓力。" 
     }
 ];
 
@@ -28,28 +28,24 @@ let gameState = {
   acceptedFamilies: 0,
   rejectedFamilies: 0,
   gameFailed: false,
-  choices: [], 
-  finalResult: '' 
+  choices: [] 
 };
 
 let currentSectionId = 'stage-1-result';
 let currentGameId = null;
 let isNavigating = false;
 
-// 核心：絲滑轉場功能
 function navigateTo(secId, gameId = null) {
     if (isNavigating) return;
     isNavigating = true;
 
     cleanupScreen(currentGameId);
 
-    // 隱藏所有
     document.querySelectorAll('.screen-section, .game-screen').forEach(el => {
         el.classList.remove('active');
         el.classList.add('hidden');
     });
 
-    // 顯示新頁面
     const sec = document.getElementById(secId);
     if (sec) {
         sec.classList.remove('hidden');
@@ -83,8 +79,6 @@ function cleanupScreen(id) {
 function initScreen(id) {
     if (id === 'game-g3' && !gameState.ageTimerInterval && !gameState.gameFailed) {
         startAgeTimer();
-    }
-    if (id === 'game-g3') {
         document.getElementById('btn-start-foster-game').classList.remove('hidden');
         document.getElementById('stress-meter-container').classList.add('hidden');
         document.getElementById('foster-game-area').classList.add('hidden');
@@ -116,24 +110,38 @@ function initScreen(id) {
         document.getElementById('btn-g5-to-g6').classList.add('hidden');
     }
     if (id === 'game-g6') {
-        ['btn-proc-1', 'btn-proc-2', 'btn-proc-3'].forEach(b => {
-            const btn = document.getElementById(b);
-            if(btn) {
-                btn.classList.remove('btn-pressed');
-                if(b !== 'btn-proc-1') {
-                    btn.disabled = true;
-                    btn.style.opacity = '0.5';
-                } else {
-                    btn.disabled = false;
-                    btn.style.opacity = '1';
+        // 如果第三步選擇全拒絕，這裡會直接跳過按鈕顯示結局
+        if (gameState.acceptedFamilies === 0) {
+            document.getElementById('g6-subtitle').classList.add('hidden');
+            document.getElementById('g6-process-buttons').classList.add('hidden');
+            
+            const g6Msg = document.getElementById('g6-msg');
+            g6Msg.innerHTML = '<p style="font-size:1.3em;"><strong>❌ 結局：未媒合到適合家庭</strong></p><div style="text-align: left; margin-top:15px; font-size: 0.95em;"><p><strong>【社工結案評估】</strong></p><p>你審慎評估後，認為目前的家庭都不適合收養這名特殊兒童，全部予以拒絕。</p><p>孩子沒有找到家，只能繼續留在寄養體系中等待。隨著孩子年紀增長，國內家庭的收養意願幾乎為零，這是一場沒有盡頭的消耗戰...</p></div>';
+            g6Msg.className = 'pixel-box-inner error-state';
+            g6Msg.classList.remove('hidden');
+            
+            document.getElementById('btn-g6-to-r').classList.remove('hidden');
+        } else {
+            document.getElementById('g6-subtitle').classList.remove('hidden');
+            document.getElementById('g6-process-buttons').classList.remove('hidden');
+            ['btn-proc-1', 'btn-proc-2', 'btn-proc-3'].forEach(b => {
+                const btn = document.getElementById(b);
+                if(btn) {
+                    btn.classList.remove('btn-pressed');
+                    if(b !== 'btn-proc-1') {
+                        btn.disabled = true;
+                        btn.style.opacity = '0.5';
+                    } else {
+                        btn.disabled = false;
+                        btn.style.opacity = '1';
+                    }
                 }
-            }
-        });
-        document.getElementById('g6-msg').classList.add('hidden');
-        document.getElementById('btn-g6-to-r').classList.add('hidden');
+            });
+            document.getElementById('g6-msg').classList.add('hidden');
+            document.getElementById('btn-g6-to-r').classList.add('hidden');
+        }
     }
 }
-
 
 // ---------- 年齡計算系統 ----------
 function updateAgeDisplay() {
@@ -151,10 +159,13 @@ function updateAgeDisplay() {
       if (el) el.classList.remove('age-alert');
   }
 
+  // 6歲強制結束
   if (gameState.childAgeMonths >= 72 && !gameState.gameFailed) {
     gameState.gameFailed = true;
     stopAgeTimer();
-    navigateTo('stage-2', 'game-r-no-match'); 
+    // 將所有未達條件的人送往未媒合結局(在G6顯示)
+    gameState.acceptedFamilies = 0; 
+    navigateTo('stage-2', 'game-g6'); 
   }
 }
 
@@ -163,7 +174,7 @@ function startAgeTimer() {
   gameState.ageTimerInterval = setInterval(() => {
     gameState.childAgeMonths++;
     updateAgeDisplay();
-  }, 2000); // 已經修改為每 2000 毫秒 (2秒) 增加 1 個月
+  }, 2000); 
 }
 
 function stopAgeTimer() {
@@ -226,7 +237,6 @@ function spawnSingleBubble(area) {
         bubble.removeEventListener('mousedown', onBubbleClick);
         bubble.classList.add('popped');
         
-        // 點擊消除一次扣 25 點壓力
         stressLevel = Math.max(0, stressLevel - 25);
         updateStressUI();
         
@@ -283,20 +293,20 @@ function renderCurrentCard() {
   if (gameState.currentCardIndex >= familyCases.length) {
     container.innerHTML = '';
     
+    document.getElementById('g4-action-btns').classList.add('hidden');
+    
+    // 如果全都拒絕，直接跳到最後一步(G6)看未媒合結局；否則進入第三步(G5)審查評估
     if (gameState.acceptedFamilies === 0) {
-        document.getElementById('g4-action-btns').classList.add('hidden');
         setTimeout(() => {
             stopAgeTimer();
-            navigateTo('stage-2', 'game-r-no-match');
+            navigateTo('stage-2', 'game-g6');
         }, 500);
-        return;
     } else {
-        document.getElementById('g4-action-btns').classList.add('hidden');
         setTimeout(() => {
             navigateTo('stage-2', 'game-g5');
         }, 500);
-        return;
     }
+    return;
   }
 
   const family = familyCases[gameState.currentCardIndex];
@@ -369,10 +379,9 @@ function handleScrollNext() {
 
 document.addEventListener('DOMContentLoaded', () => {
 
-  // 首頁專用下滑按鈕
   document.getElementById('btn-scroll-down')?.addEventListener('click', () => navigateTo('stage-2', 'game-main'));
 
-  // 電腦滾輪
+  // 電腦滾輪：只允許在首頁下滑進入遊戲
   window.addEventListener('wheel', (e) => {
       if (isNavigating) return;
       if (currentSectionId === 'stage-1-result' && e.deltaY > 30) {
@@ -380,7 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
   });
 
-  // 手機觸控
+  // 手機觸控：只允許在首頁下滑進入遊戲
   let touchStartY = 0;
   window.addEventListener('touchstart', (e) => {
       touchStartY = e.touches[0].clientY;
@@ -391,13 +400,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (currentSectionId === 'stage-1-result' && dy > 40) {
           navigateTo('stage-2', 'game-main');
       }
-  });
-
-  // 結局頁閱讀報導按鈕
-  document.querySelectorAll('.btn-to-stage-3').forEach(btn => {
-    btn.addEventListener('click', () => {
-      navigateTo('stage-3', null);
-    });
   });
 
   // 流程按鈕
@@ -448,7 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
     navigateTo('stage-2', 'game-g6');
   });
 
-  // === 第四步收養程序按鈕 ===
+  // === 第四步收養程序與結局判定 ===
   const btnProc1 = document.getElementById('btn-proc-1');
   const btnProc2 = document.getElementById('btn-proc-2');
   const btnProc3 = document.getElementById('btn-proc-3');
@@ -468,29 +470,35 @@ document.addEventListener('DOMContentLoaded', () => {
   btnProc3?.addEventListener('click', () => {
       btnProc3.classList.add('btn-pressed');
       
+      // 成功組合：001不適合(false)、002適合(true)、003不適合(false)
       const isPerfectMatch = (gameState.choices[0] === false && gameState.choices[1] === true && gameState.choices[2] === false);
 
       if (g6Msg && btnG6ToR) {
           if (isPerfectMatch) {
-              g6Msg.innerHTML = '<p><strong>🎉 恭喜！所有法定程序皆已完成，這個家庭非常適合收養孩子！</strong></p>';
+              g6Msg.innerHTML = '<p style="font-size:1.3em;"><strong>🎉 恭喜！收養程序順利完成！</strong></p><div style="text-align: left; margin-top:15px; font-size: 0.95em;"><p><strong>【社工結案評估】</strong></p><p>你做出了最敏銳的判斷！002家庭具備極高的<strong>包容度與工作彈性</strong>。先生的遠端工作能機動配合早療，太太專心建立依附關係。他們不期待孩子「正常」，且長輩願意正向協助，是特殊兒最理想的避風港。</p></div>';
               g6Msg.className = 'pixel-box-inner success-state';
-              gameState.finalResult = 'success';
           } else {
-              g6Msg.innerHTML = '<p><strong>❌ 試養與評估過程中發生嚴重適應問題，程序終止。</strong></p>';
+              let failReasons = '';
+              if (gameState.choices[0] === true) {
+                  failReasons += '<p><strong>001 高社經家庭：</strong>夫妻皆高壓高工時，無法配合請育嬰假。將醫療視為修復工具，期待孩子跟上一般人，給孩子帶來極大成就壓力，且缺乏親自陪伴的彈性。</p>';
+              }
+              if (gameState.choices[2] === true) {
+                  failReasons += '<p><strong>003 大家族企業：</strong>太太承受極大家族壓力，收養參雜穩固地位考量。同住長輩的偏見讓特殊兒成為家族矛盾導火線，缺乏無條件接納的空間。</p>';
+              }
+              
+              g6Msg.innerHTML = `<p style="font-size:1.3em;"><strong>❌ 結局：收養宣告失敗</strong></p><div style="text-align: left; margin-top:15px; font-size: 0.95em;"><p><strong>【社工結案評估】</strong></p><p>試養與評估過程中發生嚴重適應問題，程序被迫終止：</p>${failReasons}<p style="margin-top:10px;">孩子只能退回安置體系，繼續漫長而未知的等待...</p></div>`;
               g6Msg.className = 'pixel-box-inner error-state';
-              gameState.finalResult = 'wrong_choice';
           }
           g6Msg.classList.remove('hidden');
           btnG6ToR.classList.remove('hidden');
       }
   });
 
-  btnG6ToR?.addEventListener('click', () => {
-    if (gameState.finalResult === 'success') {
-        navigateTo('stage-2', 'game-r2');
-    } else {
-        navigateTo('stage-2', 'game-r-wrong-choice');
-    }
+  // 統一連至報導
+  document.querySelectorAll('.btn-to-stage-3').forEach(btn => {
+    btn.addEventListener('click', () => {
+      navigateTo('stage-3', null);
+    });
   });
 
 });
