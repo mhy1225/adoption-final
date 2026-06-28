@@ -11,12 +11,12 @@ const familyCases = [
     { 
         id: 2, 
         title: "收養檔案號：002", 
-        content: "<strong>【雙薪彈性辦公家庭】</strong><br><strong>背景：</strong>先生（41歲）為遠距接案工程師，太太（39歲）為兼職會計。收入中等財務穩健。<br><strong>收養動機：</strong>結婚 8 年未生育，具備特殊兒早療志工經驗，理解「進步不是直線的」。<br><strong>支持系統：</strong>太太可轉全職，先生遠端工作彈性大。雙方父母觀念開明，願意在週末協助照顧，甚至已主動報名特殊兒照護課程。" 
+        content: "<strong>【雙薪彈性辦公家庭】</strong><br><strong>背景：</strong>先生（41歲）為遠距接案工程師，太太（39歲）為兼職會計。收入中等財務穩健。<br><strong>收養動機：</strong>結婚 8 年未生育，具備特殊兒早療志工經驗，理解「進步不是直線的」。<br><strong>支持系統：</strong>父親工時長，加班時間不固定，母親為全職家庭主婦是主要照顧人，也表明很願意花時間投入特殊兒的照顧。不過同住的公婆認為收養的小孩終究不是自家人，希望夫妻擁有自己的小孩。" 
     },
     { 
         id: 3, 
         title: "收養檔案號：003", 
-        content: "<strong>【傳統大家族企業】</strong><br><strong>背景：</strong>先生（38歲）為傳產接班人，與父母親戚同住透天別墅。太太（36歲）為全職家庭主婦。<br><strong>收養動機：</strong>面臨長輩傳宗接代壓力，妥協轉而尋求收養。<br><strong>支持系統：</strong>父親工時長，加班時間不固定，母親為全職家庭主婦是主要照顧人，也表明很願意花時間投入特殊兒的照顧。不過同住的公婆認為收養的小孩終究不是自家人，希望夫妻擁有自己的小孩。" 
+        content: "<strong>【傳統大家族企業】</strong><br><strong>背景：</strong>先生（38歲）為傳產接班人，與父母親戚同住透天別墅。太太（36歲）為全職家庭主婦。<br><strong>收養動機：</strong>面臨長輩傳宗接代壓力，妥協轉而尋求收養。<br><strong>支持系統：</strong>與公婆同住，雖有人手，但長輩對特殊兒帶有嚴重偏見，認為是業障，無法提供正向支持，反而會對主要照顧者施加極大壓力。" 
     }
 ];
 
@@ -192,7 +192,9 @@ function updateAgeDisplay() {
   if (gameState.childAgeMonths >= 72 && !gameState.gameFailed) {
     gameState.gameFailed = true;
     stopAgeTimer();
-    triggerTimeoutOutcome();
+    // 將所有未達條件的人送往未媒合結局(在G6顯示)
+    gameState.acceptedFamilies = 0; 
+    navigateTo('stage-2', 'game-g6'); 
   }
 }
 
@@ -320,16 +322,16 @@ function renderCurrentCard() {
   if (gameState.currentCardIndex >= familyCases.length) {
     container.innerHTML = '';
     
-    // 如果全都拒絕，直接跳到 G6 (未媒合結局)
+    document.getElementById('g4-action-btns').classList.add('hidden');
+    
+    // 如果全都拒絕，跳到結局；否則進入審查評估
     if (gameState.acceptedFamilies === 0) {
-        document.getElementById('g4-action-btns').classList.add('hidden');
         setTimeout(() => {
             stopAgeTimer();
             navigateTo('stage-2', 'game-g6');
         }, 500);
         return;
     } else {
-        document.getElementById('g4-action-btns').classList.add('hidden');
         setTimeout(() => {
             navigateTo('stage-2', 'game-g5');
         }, 500);
@@ -409,7 +411,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   document.getElementById('btn-scroll-down')?.addEventListener('click', () => navigateTo('stage-2', 'game-main'));
 
-  // 電腦滾輪：只允許在首頁下滑進入遊戲
   window.addEventListener('wheel', (e) => {
       if (isNavigating) return;
       if (currentSectionId === 'stage-1-result' && e.deltaY > 30) {
@@ -417,7 +418,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
   });
 
-  // 手機觸控：只允許在首頁下滑進入遊戲
   let touchStartY = 0;
   window.addEventListener('touchstart', (e) => {
       touchStartY = e.touches[0].clientY;
@@ -430,10 +430,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
   });
 
-  // 統一連至報導
+  // ====== 點擊跳轉至完整報導網頁 ======
   document.querySelectorAll('.btn-to-stage-3').forEach(btn => {
     btn.addEventListener('click', () => {
-      navigateTo('stage-3', null);
+      // 導向至您的 Github Pages 指定區塊
+      window.location.href = 'https://ceuwan1113-sys.github.io/05292/#s3';
     });
   });
 
@@ -537,7 +538,6 @@ document.addEventListener('DOMContentLoaded', () => {
           gameState.gameFailed = false;
       }
       
-      // 回到第二步 (game-g4)
       navigateTo('stage-2', 'game-g4');
   });
 
