@@ -1,213 +1,494 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>特殊兒童國內出養困境｜融媒體專題</title>
+// ============================================
+//  特殊兒童收養互動新聞 — script.js
+// ============================================
+
+const familyCases = [
+    { 
+        id: 1, 
+        title: "收養檔案號：001", 
+        content: "<strong>【高社經菁英家庭】</strong><br><strong>背景：</strong>先生（45歲）為科技業副總，太太（42歲）為外商銀行高管。年收破千萬，居住於市中心豪宅，並預先聘請全職保母。<br><strong>收養動機：</strong>經歷多年不孕，認為自身擁有頂級資源，能給予孩子最好的醫療與教育。<br><strong>社工評估筆記：</strong>夫妻雙方皆處於極高壓環境，無法配合請育嬰假。面對早療需求傾向「花錢請保母解決」，期待孩子能透過醫療跟上一般人的發展標準。" 
+    },
+    { 
+        id: 2, 
+        title: "收養檔案號：002", 
+        content: "<strong>【雙薪彈性辦公家庭】</strong><br><strong>背景：</strong>先生（41歲）為遠距接案工程師，太太（39歲）為兼職會計。收入中等財務穩健。<br><strong>收養動機：</strong>結婚 8 年未生育，具備特殊兒早療志工經驗，理解「進步不是直線的」。<br><strong>社工評估筆記：</strong>展現極高的<strong>「包容度」與「工作彈性」</strong>。先生能隨時機動配合醫院復健；太太計畫前兩年轉全職建立依附關係。不期待孩子變得「正常」，而是準備好陪孩子面對真實人生。" 
+    },
+    { 
+        id: 3, 
+        title: "收養檔案號：003", 
+        content: "<strong>【傳統大家族企業】</strong><br><strong>背景：</strong>先生（38歲）為傳產接班人，與父母親戚同住透天別墅。太太（36歲）為全職家庭主婦。<br><strong>收養動機：</strong>面臨長輩傳宗接代壓力，妥協轉而尋求收養。<br><strong>社工評估筆記：</strong>太太承受極大壓力，收養動機參雜「穩固地位」考量。同住長輩對特殊狀況帶有偏見，認為是「業障」。特殊兒童極易成為家族矛盾導火線，缺乏無條件接納的空間。" 
+    }
+];
+
+// ---------- 狀態與全局路由 ----------
+let gameState = {
+  childAgeMonths: 12,     
+  ageTimerInterval: null,
+  currentCardIndex: 0,
+  acceptedFamilies: 0,
+  rejectedFamilies: 0,
+  gameFailed: false,
+  choices: [], 
+  finalResult: '' 
+};
+
+let currentSectionId = 'stage-1-result';
+let currentGameId = null;
+let isNavigating = false;
+
+// 核心：絲滑轉場功能 (已拔除歷史與返回機制)
+function navigateTo(secId, gameId = null) {
+    if (isNavigating) return;
+    isNavigating = true;
+
+    cleanupScreen(currentGameId);
+
+    // 隱藏所有
+    document.querySelectorAll('.screen-section, .game-screen').forEach(el => {
+        el.classList.remove('active');
+        el.classList.add('hidden');
+    });
+
+    // 顯示新頁面
+    const sec = document.getElementById(secId);
+    if (sec) {
+        sec.classList.remove('hidden');
+        sec.classList.add('active');
+    }
+    if (gameId) {
+        const game = document.getElementById(gameId);
+        if (game) {
+            game.classList.remove('hidden');
+            game.classList.add('active');
+        }
+    }
+
+    currentSectionId = secId;
+    currentGameId = gameId;
+
+    initScreen(gameId);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    setTimeout(() => isNavigating = false, 650); 
+}
+
+function cleanupScreen(id) {
+    if (id === 'game-g3') {
+        clearInterval(spawnInterval);
+        clearInterval(countdownInterval);
+        clearInterval(stressIncreaseInterval);
+    }
+}
+
+function initScreen(id) {
+    if (id === 'game-g3' && !gameState.ageTimerInterval && !gameState.gameFailed) {
+        startAgeTimer();
+    }
+    if (id === 'game-g3') {
+        document.getElementById('btn-start-foster-game').classList.remove('hidden');
+        document.getElementById('stress-meter-container').classList.add('hidden');
+        document.getElementById('foster-game-area').classList.add('hidden');
+        document.getElementById('foster-result-msg').classList.add('hidden');
+        document.getElementById('btn-g3-to-g4').classList.add('hidden');
+    }
+    if (id === 'game-g4') {
+        gameState.currentCardIndex = 0;
+        gameState.acceptedFamilies = 0;
+        gameState.rejectedFamilies = 0;
+        gameState.choices = []; 
+        document.getElementById('g4-action-btns').classList.remove('hidden');
+        renderCurrentCard();
+    }
+    if (id === 'game-g5') {
+        ['btn-eval-1', 'btn-eval-2', 'btn-eval-3', 'btn-eval-4'].forEach(b => {
+            const btn = document.getElementById(b);
+            if(btn) {
+                btn.classList.remove('btn-pressed');
+                if(b !== 'btn-eval-1') {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.5';
+                } else {
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                }
+            }
+        });
+        document.getElementById('btn-g5-to-g6').classList.add('hidden');
+    }
+    if (id === 'game-g6') {
+        ['btn-proc-1', 'btn-proc-2', 'btn-proc-3'].forEach(b => {
+            const btn = document.getElementById(b);
+            if(btn) {
+                btn.classList.remove('btn-pressed');
+                if(b !== 'btn-proc-1') {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.5';
+                } else {
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                }
+            }
+        });
+        document.getElementById('g6-msg').classList.add('hidden');
+        document.getElementById('btn-g6-to-r').classList.add('hidden');
+    }
+}
+
+
+// ---------- 年齡計算系統 ----------
+function updateAgeDisplay() {
+  const years = Math.floor(gameState.childAgeMonths / 12);
+  const months = gameState.childAgeMonths % 12;
+  const el = document.getElementById('child-age');
+  if (el) el.textContent = `${years}歲 ${months}個月`;
+
+  const warning = document.getElementById('age-warning');
+  if (gameState.childAgeMonths >= 36) {
+      if (warning) warning.classList.remove('hidden');
+      if (el) el.classList.add('age-alert');
+  } else {
+      if (warning) warning.classList.add('hidden');
+      if (el) el.classList.remove('age-alert');
+  }
+
+  if (gameState.childAgeMonths >= 72 && !gameState.gameFailed) {
+    gameState.gameFailed = true;
+    stopAgeTimer();
+    navigateTo('stage-2', 'game-r-no-match'); 
+  }
+}
+
+function startAgeTimer() {
+  stopAgeTimer();
+  gameState.ageTimerInterval = setInterval(() => {
+    gameState.childAgeMonths++;
+    updateAgeDisplay();
+  }, 3000); 
+}
+
+function stopAgeTimer() {
+  if (gameState.ageTimerInterval) {
+    clearInterval(gameState.ageTimerInterval);
+    gameState.ageTimerInterval = null;
+  }
+}
+
+// ---------- 第一步：寄養家庭壓力小遊戲 ----------
+let stressLevel = 0;
+let gameTimer = 10;
+let spawnInterval, countdownInterval, stressIncreaseInterval;
+const crises = ["急診發燒", "早療排不到", "情緒失控", "半夜哭鬧", "加班", "家長生病"];
+
+function updateStressUI() {
+    const bar = document.getElementById('stress-bar');
+    const text = document.getElementById('stress-text');
+    bar.style.width = `${stressLevel}%`;
+    text.innerText = `${Math.floor(stressLevel)}%`;
+    if(stressLevel < 50) bar.style.background = '#2ecc71';
+    else if (stressLevel < 80) bar.style.background = '#f1c40f';
+    else bar.style.background = '#e74c3c';
+}
+
+function endFosterGame(isWin) {
+    clearInterval(spawnInterval);
+    clearInterval(countdownInterval);
+    clearInterval(stressIncreaseInterval);
     
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DotGothic16&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    document.getElementById('foster-game-area').innerHTML = ''; 
+    document.getElementById('foster-game-area').classList.add('hidden');
+    
+    const msgBox = document.getElementById('foster-result-msg');
+    msgBox.classList.remove('hidden');
+    
+    if (isWin) {
+        msgBox.innerHTML = "<p><strong>驚險撐過這段時期！</strong><br>寄養家庭成功維持了孩子的穩定，但我們必須趕快幫孩子尋找永久的家。</p>";
+        msgBox.className = 'pixel-box-inner success-state';
+    } else {
+        msgBox.innerHTML = "<p><strong>💥 壓力爆表！</strong><br>寄養家庭無法負荷照顧壓力，孩子被迫轉換安置機構... <strong>(耗時增加 3 個月)</strong></p>";
+        msgBox.className = 'pixel-box-inner error-state';
+        gameState.childAgeMonths += 3;
+        updateAgeDisplay();
+    }
+    document.getElementById('btn-g3-to-g4').classList.remove('hidden');
+}
 
-    <style>
-      /* 強制覆蓋卡片樣式確保不透明且置中 */
-      #family-cards-container { position: relative; }
-      .family-card {
-        background: #ffffff !important;
-        backdrop-filter: none !important;
-        -webkit-backdrop-filter: none !important;
-        opacity: 1 !important;
-        color: #222222 !important;
-        text-align: center;
+function spawnSingleBubble(area) {
+    const bubble = document.createElement('div');
+    bubble.className = 'stress-bubble';
+    bubble.innerText = crises[Math.floor(Math.random() * crises.length)];
+    
+    const maxX = area.clientWidth - 100;
+    const maxY = area.clientHeight - 40;
+    bubble.style.left = `${Math.floor(Math.random() * maxX)}px`;
+    bubble.style.top = `${Math.floor(Math.random() * maxY)}px`;
+
+    bubble.addEventListener('mousedown', function onBubbleClick() {
+        bubble.removeEventListener('mousedown', onBubbleClick);
+        bubble.classList.add('popped');
+        
+        // 點擊消除一次扣 25 點壓力
+        stressLevel = Math.max(0, stressLevel - 25);
+        updateStressUI();
+        
+        setTimeout(() => { if (area.contains(bubble)) bubble.remove(); }, 200);
+    });
+
+    area.appendChild(bubble);
+    setTimeout(() => {
+        if (area.contains(bubble) && !bubble.classList.contains('popped')) bubble.remove();
+    }, 1500);
+}
+
+function startFosterGame() {
+    stressLevel = 0;
+    gameTimer = 10;
+    updateStressUI();
+    
+    document.getElementById('btn-start-foster-game').classList.add('hidden');
+    document.getElementById('stress-meter-container').classList.remove('hidden');
+    document.getElementById('foster-game-area').classList.remove('hidden');
+    document.getElementById('game-timer-text').innerText = `剩餘時間：${gameTimer} 秒`;
+    
+    const area = document.getElementById('foster-game-area');
+    
+    countdownInterval = setInterval(() => {
+        gameTimer--;
+        document.getElementById('game-timer-text').innerText = `剩餘時間：${gameTimer} 秒`;
+        if (gameTimer <= 0) endFosterGame(true); 
+    }, 1000);
+
+    stressIncreaseInterval = setInterval(() => {
+        stressLevel += 1;
+        if (stressLevel >= 100) {
+            stressLevel = 100;
+            updateStressUI();
+            endFosterGame(false); 
+        } else {
+            updateStressUI();
+        }
+    }, 33);
+
+    spawnSingleBubble(area);
+    spawnInterval = setInterval(() => {
+        if (stressLevel >= 100 || gameTimer <= 0) return;
+        spawnSingleBubble(area);
+    }, 200); 
+}
+
+// ---------- 第二步：卡片渲染 (筆記本風格) ----------
+function renderCurrentCard() {
+  const container = document.getElementById('family-cards-container');
+  if (!container) return;
+
+  if (gameState.currentCardIndex >= familyCases.length) {
+    container.innerHTML = '';
+    
+    // 如果全都拒絕，直接跳到未媒合結局；否則進入審查評估
+    if (gameState.acceptedFamilies === 0) {
+        document.getElementById('g4-action-btns').classList.add('hidden');
+        setTimeout(() => {
+            stopAgeTimer();
+            navigateTo('stage-2', 'game-r-no-match');
+        }, 500);
+        return;
+    } else {
+        document.getElementById('g4-action-btns').classList.add('hidden');
+        setTimeout(() => {
+            navigateTo('stage-2', 'game-g5');
+        }, 500);
+        return;
+    }
+  }
+
+  const family = familyCases[gameState.currentCardIndex];
+  container.innerHTML = `
+    <div class="family-card">
+      <div class="notebook-title">${family.title}</div>
+      <div class="notebook-content">${family.content}</div>
+    </div>
+  `;
+}
+
+function swipeCard(isAccepted) {
+  const container = document.getElementById('family-cards-container');
+  const card = container ? container.querySelector('.family-card') : null;
+
+  gameState.choices.push(isAccepted);
+
+  if (card) {
+    const stamp = document.createElement('div');
+    stamp.style.position = 'absolute';
+    stamp.style.top = '50%';
+    stamp.style.left = '50%';
+    stamp.style.transform = 'translate(-50%, -50%) rotate(-15deg) scale(2)';
+    stamp.style.fontSize = '3rem';
+    stamp.style.fontWeight = 'bold';
+    stamp.style.border = '6px solid';
+    stamp.style.padding = '10px 25px';
+    stamp.style.borderRadius = '15px';
+    stamp.style.zIndex = '100';
+    stamp.style.opacity = '0';
+    stamp.style.transition = 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+    stamp.style.fontFamily = 'monospace';
+    stamp.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+    
+    if (isAccepted) {
+        stamp.innerText = '適 合';
+        stamp.style.color = '#2ecc71';
+        stamp.style.borderColor = '#2ecc71';
+    } else {
+        stamp.innerText = '不適合';
+        stamp.style.color = '#e74c3c';
+        stamp.style.borderColor = '#e74c3c';
+    }
+    card.appendChild(stamp);
+    
+    setTimeout(() => {
+        stamp.style.opacity = '1';
+        stamp.style.transform = 'translate(-50%, -50%) rotate(-5deg) scale(1)';
+    }, 10);
+
+    setTimeout(() => {
+        card.style.transform = 'rotateY(-130deg)';
+        card.style.opacity = '0';
+    }, 600);
+  }
+
+  setTimeout(() => {
+    if (isAccepted) gameState.acceptedFamilies++;
+    else gameState.rejectedFamilies++;
+    gameState.currentCardIndex++;
+    renderCurrentCard();
+  }, 1100);
+}
+
+// ---------- 事件綁定與單向滑動邏輯 ----------
+
+document.addEventListener('DOMContentLoaded', () => {
+
+  // 首頁專用下滑按鈕
+  document.getElementById('btn-scroll-down')?.addEventListener('click', () => navigateTo('stage-2', 'game-main'));
+
+  // 電腦滾輪：只允許在首頁下滑進入遊戲，其餘滑動全部關閉
+  window.addEventListener('wheel', (e) => {
+      if (isNavigating) return;
+      if (currentSectionId === 'stage-1-result' && e.deltaY > 30) {
+          navigateTo('stage-2', 'game-main');
       }
-      .family-card *, #family-cards-container * { color: #222222 !important; text-align: center; }
-      .family-card strong, #family-cards-container strong { color: #b45309 !important; }
-    </style>
-</head>
-<body>
+  });
 
-<div id="app-container" style="text-align: center;"> <!-- 全局置中 -->
+  // 手機觸控：只允許在首頁下滑進入遊戲，其餘滑動全部關閉
+  let touchStartY = 0;
+  window.addEventListener('touchstart', (e) => {
+      touchStartY = e.touches[0].clientY;
+  });
+  window.addEventListener('touchend', (e) => {
+      if (isNavigating) return;
+      const dy = touchStartY - e.changedTouches[0].clientY;
+      if (currentSectionId === 'stage-1-result' && dy > 40) {
+          navigateTo('stage-2', 'game-main');
+      }
+  });
 
-    <!-- ========== Stage 1：數據揭曉 (首頁) ========== -->
-    <section id="stage-1-result" class="screen-section active" style="min-height: 90vh; display: flex; flex-direction: column; justify-content: center; position: relative; text-align: center;">
-        <div class="pixel-box text-center" style="margin-bottom: 40px; display: inline-block;">
-            <h1 id="result-feedback" style="font-size: 2.2em; color: #e74c3c; margin-bottom: 20px;">現實，遠比數據沉重</h1>
-            <p class="stats-compare" style="font-size: 1.2em;">2025 年只有 <strong>18% (13/77)</strong> 正在找家的特殊兒童，<br>在台灣順利找到屬於他的家。</p>
-            <p style="margin-top: 15px; font-size: 0.95em; color: #555; line-height: 1.6;">大眾的預期往往相對樂觀，<br>但體制內的等待，卻是一場沒有盡頭的消耗戰。</p>
-        </div>
-        
-        <div class="interaction-area text-center">
-            <div class="scroll-prompt" id="btn-scroll-down" style="cursor: pointer;">
-                <span style="font-size: 1.8em;">👇</span><br>
-                <strong>向下滑動，親自體驗社工與寄養家庭的日常</strong>
-            </div>
-        </div>
-    </section>
+  // 結局頁閱讀報導按鈕
+  document.querySelectorAll('.btn-to-stage-3').forEach(btn => {
+    btn.addEventListener('click', () => {
+      navigateTo('stage-3', null);
+    });
+  });
 
-    <!-- ========== Stage 2：遊戲 ========== -->
-    <section id="stage-2" class="screen-section hidden">
-        <div class="game-hud pixel-box text-center">
-            <span>個案年齡：<span id="child-age">1歲 0個月</span></span>
-            <span class="warning-text hidden" id="age-warning"><br>⚠ 3歲提醒：媒合難度大幅提升 ⚠</span>
-        </div>
+  // 流程按鈕
+  document.getElementById('btn-start-task')?.addEventListener('click', () => {
+    navigateTo('stage-2', 'game-g3');
+  });
 
-        <!-- 遊戲開場 -->
-        <div id="game-main" class="game-screen hidden pixel-box text-center">
-            <h2>案件指派</h2>
-            <div class="intro-highlight" style="display: inline-block; text-align: center;">
-                <p>你是一名社工。<br>今天，你收到一個個案，這個小孩帶有特殊身心狀況，其母親委託出養。</p>
-                <p>根據國內優先原則，國內出養的黃金時期極為短暫。<br><strong style="color: #e74c3c; font-size: 1.1em;">請在孩子成長到 6 歲前，努力幫孩子尋家。</strong></p>
-            </div>
-            <br><br>
-            <button class="pixel-btn primary" id="btn-start-task">安排進入寄養家庭 ➔</button>
-        </div>
+  document.getElementById('btn-start-foster-game')?.addEventListener('click', startFosterGame);
+  document.getElementById('btn-g3-to-g4')?.addEventListener('click', () => navigateTo('stage-2', 'game-g4'));
 
-        <!-- 第一步：寄養家庭生活 -->
-        <div id="game-g3" class="game-screen pixel-box hidden text-center">
-            <h2>第一步：寄養家庭的考驗</h2>
-            <p>照顧特殊兒的壓力極大，突發狀況不斷。<br><strong>👉 請在 10 秒內瘋狂點擊消除「狀況」，若壓力值達 100% 將導致安置失敗！</strong></p>
-            
-            <div id="stress-meter-container" class="hidden" style="max-width: 400px; margin: 0 auto;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-weight: bold;">
-                    <span>寄養家庭壓力值</span>
-                    <span id="stress-text">0%</span>
-                </div>
-                <div style="width: 100%; height: 20px; border: 2px solid #333; background: #fff; position: relative;">
-                    <div id="stress-bar" style="width: 0%; height: 100%; background: #e74c3c; transition: width 0.03s linear, background-color 0.3s;"></div>
-                </div>
-                <p id="game-timer-text" style="text-align: right; font-size: 0.9em; margin-top: 5px; color: #666;">剩餘時間：10 秒</p>
-            </div>
+  document.getElementById('btn-g4-accept')?.addEventListener('click', () => swipeCard(true));
+  document.getElementById('btn-g4-reject')?.addEventListener('click', () => swipeCard(false));
 
-            <div id="foster-game-area" class="pixel-box-inner hidden" style="height: 220px; position: relative; overflow: hidden; margin-top: 15px; background: #e5e7eb;"></div>
+  // === 第三步審查評估按鈕 (+3個月年齡) ===
+  const btnEval1 = document.getElementById('btn-eval-1');
+  const btnEval2 = document.getElementById('btn-eval-2');
+  const btnEval3 = document.getElementById('btn-eval-3');
+  const btnEval4 = document.getElementById('btn-eval-4');
+  const btnG5ToG6 = document.getElementById('btn-g5-to-g6');
 
-            <div id="foster-result-msg" class="pixel-box-inner hidden" style="display: inline-block;"></div>
+  btnEval1?.addEventListener('click', () => {
+      btnEval1.classList.add('btn-pressed');
+      gameState.childAgeMonths += 3; updateAgeDisplay();
+      if (btnEval2) { btnEval2.disabled = false; btnEval2.style.opacity = '1'; }
+  });
 
-            <div style="margin-top: 15px;">
-                <button class="pixel-btn primary" id="btn-start-foster-game">開始挑戰</button>
-                <button class="pixel-btn hidden" id="btn-g3-to-g4">進入第二步：介紹收養家庭 ➔</button>
-            </div>
-        </div>
+  btnEval2?.addEventListener('click', () => {
+      btnEval2.classList.add('btn-pressed');
+      gameState.childAgeMonths += 3; updateAgeDisplay();
+      if (btnEval3) { btnEval3.disabled = false; btnEval3.style.opacity = '1'; }
+  });
 
-        <!-- 第二步：介紹收養家庭 -->
-        <div id="game-g4" class="game-screen pixel-box hidden text-center">
-            <h2>第二步：介紹收養家庭</h2>
-            <p>請翻閱以下家庭檔案，評估是否適合收養這名特殊兒童。</p>
-            
-            <div id="family-cards-container" class="cards-container" style="max-width: 500px; margin: 0 auto;"></div>
-            
-            <div class="btn-group" id="g4-action-btns" style="margin-top: 20px;">
-                <button class="pixel-btn primary" id="btn-g4-accept">⭕ 適合 (蓋章翻頁)</button>
-                <button class="pixel-btn secondary" id="btn-g4-reject">❌ 不適合 (蓋章翻頁)</button>
-            </div>
-        </div>
+  btnEval3?.addEventListener('click', () => {
+      btnEval3.classList.add('btn-pressed');
+      gameState.childAgeMonths += 3; updateAgeDisplay();
+      if (btnEval4) { btnEval4.disabled = false; btnEval4.style.opacity = '1'; }
+  });
 
-        <!-- 第三步：審查評估 -->
-        <div id="game-g5" class="game-screen pixel-box hidden text-center">
-            <h2>第三步：進入審查評估</h2>
-            <p>每個被判斷適合收養的家庭，都要花時間做一系列的審查。<br>程序極度繁瑣，每推進一步，孩子就又長大了 3 個月...</p>
-            
-            <div style="display: flex; flex-direction: column; align-items: center; gap: 15px; margin: 20px 0;">
-                <button class="pixel-btn process-btn" id="btn-eval-1" style="width: 200px;">1. 上課 (+3個月)</button>
-                <button class="pixel-btn process-btn" id="btn-eval-2" disabled style="opacity: 0.5; width: 200px;">2. 會談 (+3個月)</button>
-                <button class="pixel-btn process-btn" id="btn-eval-3" disabled style="opacity: 0.5; width: 200px;">3. 家訪 (+3個月)</button>
-                <button class="pixel-btn process-btn" id="btn-eval-4" disabled style="opacity: 0.5; width: 200px;">4. 調查 (+3個月)</button>
-            </div>
+  btnEval4?.addEventListener('click', () => {
+      btnEval4.classList.add('btn-pressed');
+      gameState.childAgeMonths += 3; updateAgeDisplay();
+      if (btnG5ToG6) { btnG5ToG6.classList.remove('hidden'); }
+  });
 
-            <button class="pixel-btn primary hidden" id="btn-g5-to-g6">審查結束，進入程序 ➔</button>
-        </div>
+  document.getElementById('btn-g5-to-g6')?.addEventListener('click', () => {
+    if (gameState.gameFailed) return;
+    stopAgeTimer(); 
+    navigateTo('stage-2', 'game-g6');
+  });
 
-        <!-- 第四步：收養程序 -->
-        <div id="game-g6" class="game-screen pixel-box hidden text-center">
-            <h2>第四步：進入收養程序 (倒計時停止)</h2>
-            <p>這是一條漫長的路，為了確保孩子的最佳利益，必須依次完成法定程序：</p>
-            
-            <div style="display: flex; flex-direction: column; align-items: center; gap: 15px; margin: 20px 0;">
-                <button class="pixel-btn process-btn" id="btn-proc-1" style="width: 200px;">1. 試養</button>
-                <button class="pixel-btn process-btn" id="btn-proc-2" disabled style="opacity: 0.5; width: 200px;">2. 評估</button>
-                <button class="pixel-btn process-btn" id="btn-proc-3" disabled style="opacity: 0.5; width: 200px;">3. 法院聲請許可</button>
-            </div>
+  // === 第四步收養程序按鈕 ===
+  const btnProc1 = document.getElementById('btn-proc-1');
+  const btnProc2 = document.getElementById('btn-proc-2');
+  const btnProc3 = document.getElementById('btn-proc-3');
+  const g6Msg = document.getElementById('g6-msg');
+  const btnG6ToR = document.getElementById('btn-g6-to-r');
 
-            <div class="pixel-box-inner hidden" id="g6-msg" style="display: inline-block;"></div><br>
+  btnProc1?.addEventListener('click', () => {
+      btnProc1.classList.add('btn-pressed');
+      if (btnProc2) { btnProc2.disabled = false; btnProc2.style.opacity = '1'; }
+  });
 
-            <button class="pixel-btn primary hidden" id="btn-g6-to-r">查看最終結局 ➔</button>
-        </div>
+  btnProc2?.addEventListener('click', () => {
+      btnProc2.classList.add('btn-pressed');
+      if (btnProc3) { btnProc3.disabled = false; btnProc3.style.opacity = '1'; }
+  });
 
-        <!-- 結局 R1：全部拒絕未媒合 -->
-        <div id="game-r-no-match" class="game-screen pixel-box error-state hidden text-center">
-            <h2>結局：未媒合到適合家庭</h2>
-            <p>你審慎評估後，認為目前的家庭都不適合收養這名特殊兒童，全部予以拒絕。</p>
-            <p>孩子沒有找到家，只能繼續留在寄養體系中等待。在台灣，隨著孩子年齡增長，國內家庭的收養意願幾乎為零，這是一場沒有盡頭的消耗戰...</p>
-            <button class="pixel-btn primary btn-to-stage-3">閱讀完整報導</button>
-        </div>
+  btnProc3?.addEventListener('click', () => {
+      btnProc3.classList.add('btn-pressed');
+      
+      // 成功判定：只有在選擇為 false, true, false (001否, 002是, 003否) 時才算成功
+      const isPerfectMatch = (gameState.choices[0] === false && gameState.choices[1] === true && gameState.choices[2] === false);
 
-        <!-- 结局 R2：選擇錯誤 (001或003被選為適合) -->
-        <div id="game-r-wrong-choice" class="game-screen pixel-box error-state hidden text-center">
-            <h2>結局：收養宣告失敗</h2>
-            <p>你雖然為孩子配對了家庭，但在後續的評估與試養中，家庭的隱憂逐漸浮現，導致程序終止：</p>
-            <div style="text-align: left; background: #fff; padding: 15px; border: 2px dashed #e74c3c; margin-bottom: 15px; color: #333; font-size: 0.95em; max-width: 500px; margin-left: auto; margin-right: auto;">
-                <p style="margin-bottom: 10px;"><strong>❌ 001 高社經家庭：</strong>雖然經濟優渥，但父母處於高壓環境且無法親自陪伴。將醫療視為「修復」並期待孩子符合一般標準，會給特殊兒帶來極大壓力，缺乏真正的包容。</p>
-                <p><strong>❌ 003 大家族企業：</strong>主要照顧者承受龐大的傳宗接代壓力，且同住長輩對特殊狀況帶有偏見。在這種環境下，孩子極易成為家族矛盾的導火線，缺乏無條件接納的安全感。</p>
-            </div>
-            <p>孩子只能退回安置體系，繼續漫長而未知的等待...</p>
-            <button class="pixel-btn primary btn-to-stage-3">閱讀完整報導</button>
-        </div>
+      if (g6Msg && btnG6ToR) {
+          if (isPerfectMatch) {
+              g6Msg.innerHTML = '<p><strong>🎉 恭喜！所有法定程序皆已完成，這個家庭非常適合收養孩子！</strong></p>';
+              g6Msg.className = 'pixel-box-inner success-state';
+              gameState.finalResult = 'success';
+          } else {
+              g6Msg.innerHTML = '<p><strong>❌ 試養與評估過程中發生嚴重適應問題，程序終止。</strong></p>';
+              g6Msg.className = 'pixel-box-inner error-state';
+              gameState.finalResult = 'wrong_choice';
+          }
+          g6Msg.classList.remove('hidden');
+          btnG6ToR.classList.remove('hidden');
+      }
+  });
 
-        <!-- 結局 R3：成功找到家 (完美組合) -->
-        <div id="game-r2" class="game-screen pixel-box success-state-border hidden text-center">
-            <h2>結局：成功找到國內收養家庭</h2>
-            <p>你做出了最敏銳的判斷，成功幫孩子找到了充滿包容度與彈性的家！</p>
-            <p><strong>但在實際情況中，這只是少數的幸運...</strong></p>
-            <p>還有許多特殊兒童被卡在體制的縫隙中，等待一個遙不可及的家。</p>
-            <button class="pixel-btn primary btn-to-stage-3">閱讀完整報導</button>
-        </div>
-    </section>
+  btnG6ToR?.addEventListener('click', () => {
+    if (gameState.finalResult === 'success') {
+        navigateTo('stage-2', 'game-r2');
+    } else {
+        navigateTo('stage-2', 'game-r-wrong-choice');
+    }
+  });
 
-    <!-- ========== Stage 3：報導 ========== -->
-    <section id="stage-3" class="screen-section hidden text-center">
-        <div class="parallax-section header-parallax">
-            <div class="pixel-box" style="display: inline-block;">
-                <h1>家還有多遠？</h1>
-                <h2>特殊兒童收養困境下的漫漫長路</h2>
-            </div>
-        </div>
-
-        <article class="article-content" style="max-width: 600px; margin: 0 auto;">
-            <div class="text-block">
-                <h3>「我並不是為了領養一個小孩而去領養，而是剛好遇到我女兒。」</h3>
-                <p>坐在自家經營的藥局內，貝貝媽回想起十八年前與女兒相遇的過程。當時她在基金會擔任週末寄養家庭義工，將才四個月大、因生父母藥癮而成為「毒寶寶」的貝貝帶回家。她說：「一年前她還做不到在非固定地點下車，現在她已經可以應對不同的紅綠燈去實習了。這就是她的進步。」</p>
-            </div>
-
-            <div class="text-block">
-                <h3>寄養轉收養：愛與安置名額的殘酷拉扯</h3>
-                <p>寄養家庭若決定「自己收養」孩子，等同於減少一個社會安置名額。這使家庭陷入殘酷的二選一：選擇愛這個孩子，但佔用社會資源；或是選擇讓出名額，放棄收養，讓孩子進入未知的媒合體系。</p>
-            </div>
-        </article>
-
-        <article class="article-content" style="background-color: #f0f4f8; max-width: 600px; margin: 0 auto;">
-            <div class="text-block">
-                <span class="eyebrow">困境一：資源與補助的落差</span>
-                <p>目前台灣的補助並未區分一般兒童與收養兒童，兩者的資源與金額大致相同，難以反映在照顧成本與需求上的差異。對於涉及醫療復健、心理支持與教育輔導的特殊兒童而言，這樣的制度設計無疑加重了收養家庭的負擔。</p>
-                <p>蘇淑霞指出，現行收養制度缺乏相應配套，難以回應實際需求，他說道：「在國外收養特殊兒童，反而是一種優勢，因為整個社區與政府都會一起分擔照顧責任。」</p>
-            </div>
-
-            <div class="quote-block pixel-box" style="display: inline-block;">
-                <p>「在台灣現行制度下，收養家庭的定位尚未明確——究竟應被視為一般家庭，還是執行永久安置功能、需要國家特別支持的家庭？這個問題若無法釐清，補助政策便難以對症下藥。」</p>
-                <span style="text-align: center;">—— 陳玉楨，勵馨基金會台北分所主任</span>
-            </div>
-        </article>
-        
-        <article class="article-content" style="max-width: 600px; margin: 0 auto;">
-            <div class="text-block">
-                <span class="eyebrow">困境二：職場支援法規的脫節</span>
-                <p>除了經濟壓力，現行的職場支援法規也讓收養家庭感到疲於奔命。目前台灣的育嬰留職停薪僅適用於三歲以下的幼童，但許多大齡兒童在媒合成功時往往已超過三歲，這導致家長在孩子最需要建立依附關係的初期，卻無法請假陪伴。</p>
-                <p>蘇淑霞建議，制度應將基準從生理年齡改為「收養入籍後的前三年」：「收養大齡或特殊需求的孩子，要建立信任關係本來就比一般孩子更需要時間...」</p>
-            </div>
-        </article>
-    </section>
-
-</div>
-
-<script src="script.js"></script>
-</body>
-</html>
+});
