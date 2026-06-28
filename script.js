@@ -93,7 +93,6 @@ function initScreen(id) {
         document.getElementById('g4-action-btns').classList.remove('hidden');
         renderCurrentCard();
         
-        // 從再玩一次/重新遊戲回來時，若尚未失敗且無計時器，則重新啟動計時
         if (!gameState.ageTimerInterval && !gameState.gameFailed) {
             startAgeTimer();
         }
@@ -117,13 +116,23 @@ function initScreen(id) {
     if (id === 'game-g6') {
         document.getElementById('g6-end-actions').classList.add('hidden');
         
-        // 若全部拒絕 (在第三步被攔截) 
+        // 若全部拒絕 (在第二步被攔截)
         if (gameState.acceptedFamilies === 0 && !gameState.gameFailed) {
+            document.getElementById('g6-title').innerText = "最終結局";
             document.getElementById('g6-subtitle').classList.add('hidden');
             document.getElementById('g6-process-buttons').classList.add('hidden');
             
             const g6Msg = document.getElementById('g6-msg');
-            g6Msg.innerHTML = '<p style="font-size:1.3em;"><strong>❌ 結局：未媒合到適合家庭</strong></p><div style="text-align: left; margin-top:15px; font-size: 0.95em;"><p><strong>【社工結案評估】</strong></p><p>你審慎評估後，認為目前的家庭都不適合收養這名特殊兒童，全部予以拒絕。</p><p>孩子沒有找到家，只能繼續留在寄養體系中等待。隨著孩子年紀增長，這是一場沒有盡頭的消耗戰...</p></div>';
+            let msgHTML = '<p style="font-size:1.3em;"><strong>❌ 結局：未媒合到適合家庭</strong></p><div style="text-align: left; margin-top:15px; font-size: 0.95em;"><p><strong>【社工結案評估】</strong></p><p>你審慎評估後，認為目前的家庭都不適合收養這名特殊兒童，全部予以拒絕。</p>';
+            
+            // 補充說明錯過 002 家庭的惋惜
+            if (gameState.choices[1] === false) {
+                msgHTML += '<p style="color: #d35400; margin-top: 10px;"><strong>❗ 錯過 002 家庭的惋惜：</strong>其實 002 家庭具備極高的包容度與工作彈性，母親願意全職投入，且具備早療志工經驗。雖然長輩有微詞，但在不完美的現實中，這反而是特殊兒難得的避風港。可惜你放手了這個機會。</p>';
+            }
+            
+            msgHTML += '<p style="margin-top:10px;">孩子沒有找到家，只能繼續留在寄養體系中等待。隨著孩子年紀增長，這是一場沒有盡頭的消耗戰...</p></div>';
+            
+            g6Msg.innerHTML = msgHTML;
             g6Msg.className = 'pixel-box-inner error-state';
             g6Msg.classList.remove('hidden');
             
@@ -151,7 +160,6 @@ function initScreen(id) {
     }
 }
 
-// 顯示結局按鈕
 function showEndActions(replayText) {
     document.getElementById('g6-end-actions').classList.remove('hidden');
     document.getElementById('btn-replay-game').innerText = replayText;
@@ -192,9 +200,7 @@ function updateAgeDisplay() {
   if (gameState.childAgeMonths >= 72 && !gameState.gameFailed) {
     gameState.gameFailed = true;
     stopAgeTimer();
-    // 將所有未達條件的人送往未媒合結局(在G6顯示)
-    gameState.acceptedFamilies = 0; 
-    navigateTo('stage-2', 'game-g6'); 
+    triggerTimeoutOutcome();
   }
 }
 
@@ -324,7 +330,6 @@ function renderCurrentCard() {
     
     document.getElementById('g4-action-btns').classList.add('hidden');
     
-    // 如果全都拒絕，跳到結局；否則進入審查評估
     if (gameState.acceptedFamilies === 0) {
         setTimeout(() => {
             stopAgeTimer();
@@ -430,10 +435,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
   });
 
-  // ====== 點擊跳轉至完整報導網頁 ======
+  // 統一連至報導
   document.querySelectorAll('.btn-to-stage-3').forEach(btn => {
     btn.addEventListener('click', () => {
-      // 導向至您的 Github Pages 指定區塊
       window.location.href = 'https://ceuwan1113-sys.github.io/05292/#s3';
     });
   });
@@ -510,15 +514,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (g6Msg) {
           if (isPerfectMatch) {
+              document.getElementById('g6-title').innerText = "最終結局";
               g6Msg.innerHTML = '<p style="font-size:1.3em; color:#2ecc71;"><strong>🎉 恭喜！收養程序順利完成！</strong></p><div style="text-align: left; margin-top:15px; font-size: 0.95em;"><p><strong>【社工結案評估】</strong></p><p>你做出了最敏銳的判斷！002家庭雖然面臨長輩期待與工時的挑戰，但母親有全職投入的意願，且具備特殊兒志工經驗的包容度。在不完美的現實中，這已是孩子難得的避風港。</p></div>';
               g6Msg.className = 'pixel-box-inner success-state';
           } else {
+              document.getElementById('g6-title').innerText = "最終結局";
               let failReasons = '';
               if (gameState.choices[0] === true) {
                   failReasons += '<p><strong>❌ 001 高社經家庭：</strong>雙方皆無法親自陪伴，將照顧外包，且長輩傾向健康小孩。將醫療視為修復工具會給特殊兒帶來極大壓力，缺乏真正的包容。</p>';
               }
               if (gameState.choices[2] === true) {
                   failReasons += '<p><strong>❌ 003 大家族企業：</strong>太太承受極大家族壓力，同住長輩對特殊狀況帶有偏見。孩子極易成為家族矛盾導火線，缺乏無條件接納的安全感。</p>';
+              }
+              if (gameState.choices[1] === false) {
+                  failReasons += '<p style="color: #d35400;"><strong>❗ 錯過 002 家庭的惋惜：</strong>其實 002 家庭具備極高的包容度與工作彈性，母親願意全職投入。在不完美的現實中，這反而是特殊兒難得的避風港。可惜你放手了這個機會。</p>';
               }
               
               g6Msg.innerHTML = `<p style="font-size:1.3em; color:#e74c3c;"><strong>❌ 結局：收養宣告失敗</strong></p><div style="text-align: left; margin-top:15px; font-size: 0.95em;"><p><strong>【社工結案評估】</strong></p><p>試養與評估過程中發生嚴重適應問題，程序被迫終止：</p>${failReasons}<p style="margin-top:10px;">孩子只能退回安置體系，繼續漫長而未知的等待...</p></div>`;
