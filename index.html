@@ -49,24 +49,24 @@
     <section id="stage-2" class="screen-section hidden">
         <div class="game-hud pixel-box text-center">
             <span>個案年齡：<span id="child-age">1歲 0個月</span></span>
-            <span class="warning-text hidden" id="age-warning"><br>⚠ 3歲提醒：媒合難度大幅提升 ⚠</span>
+            <span class="warning-text hidden" id="age-warning"><br>⚠ 3歲提醒：超過黃金收養期，媒合難度大幅提升 ⚠</span>
         </div>
 
         <!-- 遊戲開場 -->
         <div id="game-main" class="game-screen hidden pixel-box text-center">
-            <h2>案件指派</h2>
+            <h2>任務指派</h2>
             <div class="intro-highlight" style="display: inline-block; text-align: center;">
                 <p>你是一名社工。<br>今天，你收到一個個案，這個小孩帶有特殊身心狀況，其母親委託出養。</p>
                 <p>根據國內優先原則，國內出養的黃金時期極為短暫。<br><strong style="color: #e74c3c; font-size: 1.1em;">請在孩子成長到 6 歲前，努力幫孩子尋家。</strong></p>
             </div>
             <br><br>
-            <button class="pixel-btn primary" id="btn-start-task">安排進入寄養家庭 ➔</button>
+            <button class="pixel-btn primary" id="btn-start-task">進入第一步：寄養家庭的考驗 ➔</button>
         </div>
 
-        <!-- 第一步：寄養家庭生活 -->
+        <!-- 第一步：寄養家庭生活 (10秒極限生存) -->
         <div id="game-g3" class="game-screen pixel-box hidden text-center">
             <h2>第一步：寄養家庭的考驗</h2>
-            <p>照顧特殊兒的壓力極大，突發狀況不斷。<br><strong>👉 請在 10 秒內瘋狂點擊消除「狀況」，若壓力值達 100% 將導致安置失敗！</strong></p>
+            <p>親屬無力撫養，孩子進入寄養家庭。但照顧特殊兒的壓力極大，突發狀況不斷。<br><strong>👉 請在 10 秒內瘋狂點擊消除「狀況」，若壓力值達 100% 將導致安置失敗！</strong></p>
             
             <div id="stress-meter-container" class="hidden" style="max-width: 400px; margin: 0 auto;">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 5px; font-weight: bold;">
@@ -114,7 +114,7 @@
                 <button class="pixel-btn process-btn" id="btn-eval-4" disabled style="opacity: 0.5; width: 200px;">4. 調查 (+3個月)</button>
             </div>
 
-            <button class="pixel-btn primary hidden" id="btn-g5-to-g6">審查結束，進入程序 ➔</button>
+            <button class="pixel-btn primary hidden" id="btn-g5-to-g6">審查結束，進入第四步 ➔</button>
         </div>
 
         <!-- 第四步：收養程序 -->
